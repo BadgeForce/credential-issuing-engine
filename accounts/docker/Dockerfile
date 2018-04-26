@@ -2,6 +2,7 @@
 FROM ubuntu:xenial
 
 LABEL "install-type"="mounted"
+ARG SSH_PRIVATE_KEY
 
 RUN echo "deb [arch=amd64] http://repo.sawtooth.me/ubuntu/ci xenial universe" >> /etc/apt/sources.list \
  && echo "deb http://archive.ubuntu.com/ubuntu xenial-backports universe" >> /etc/apt/sources.list \
@@ -18,15 +19,18 @@ RUN echo "deb [arch=amd64] http://repo.sawtooth.me/ubuntu/ci xenial universe" >>
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
 
-
+RUN mkdir /root/.ssh/
+RUN echo "${SSH_PRIVATE_KEY}" > /root/.ssh/id_rsa
 
 ENV GOPATH=/go
 ENV PATH=$PATH:/usr/lib/go-1.9/bin
 RUN mkdir -p $GOPATH/src/github.com/BadgeForce/badgeforce-chain-node
 WORKDIR $GOPATH/src/github.com/BadgeForce/badgeforce-chain-node
-ADD ./accounts .
-RUN go get 
-RUN go build ./transaction_processor -o accounts_transaction_processor .
+ADD . .
+WORKDIR ./accounts/transaction_processor
+RUN go get
+RUN go build -o accounts_transaction_processor .
+RUN rm /root/.ssh/id_rsa
 
 EXPOSE 4004/tcp
 
