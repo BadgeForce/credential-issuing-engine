@@ -1,14 +1,16 @@
 package accounts
 
 import (
-	pb "github.com/BadgeForce/badgeforce-chain-node/accounts/accounts_pb"
+	"github.com/BadgeForce/badgeforce-chain-node/accounts/account"
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	"github.com/gogo/protobuf/proto"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
 )
 
+const prefix = "accounts"
+
 // Namespace ...
-var Namespace = common.ComputeNamespace("accounts")
+var Namespace = common.ComputeNamespace(prefix)
 
 // AccountState ...
 type AccountState struct {
@@ -21,22 +23,22 @@ func NewState(context *processor.Context) *AccountState {
 	}
 }
 
-func (s *AccountState) LoadAccount(publicKey string) (*pb.Account, error) {
-	var account pb.Account
+func (s *AccountState) LoadAccount(publicKey string) (*account.Account, error) {
+	var accnt account.Account
 	address := common.MakeAddress(publicKey, Namespace)
 	state, err := s.context.GetState([]string{address})
 	if err != nil {
 		return nil, &processor.InternalError{Msg: "Could not GetState"}
 	}
 	if len(state[address]) > 0 {
-		proto.Unmarshal(state[address], &account)
-		return &account, nil
+		proto.Unmarshal(state[address], &accnt)
+		return &accnt, nil
 	}
 
-	return &pb.Account{PublicKey: publicKey}, nil
+	return &account.Account{PublicKey: publicKey}, nil
 }
 
-func (s *AccountState) StorePublicData(publicKey string, data pb.Account_PublicData) error {
+func (s *AccountState) StorePublicData(publicKey string, data account.Account_PublicData) error {
 	//validate this data
 	address := common.MakeAddress(publicKey, Namespace)
 	b, err := proto.Marshal(&data)

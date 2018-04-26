@@ -1,5 +1,7 @@
 syntax = "proto3";
-package accounts_pb;
+package account;
+
+option go_package = "github.com/BadgeForce/badgeforce-chain-node/accounts/account";
 
 message Account {
     string publicKey = 1;

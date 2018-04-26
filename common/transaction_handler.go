@@ -8,13 +8,20 @@ import (
 
 var logger *logging.Logger = logging.Get()
 
+type SubHandler struct {
+	Handle func(request *processor_pb2.TpProcessRequest, context *processor.Context) error
+}
+type SubHandlerDelegate struct {
+	GetSubHandler func(request *processor_pb2.TpProcessRequest, subHandlers map[string]SubHandler) (SubHandler, error)
+}
+
 // TransactionHandler ...
 type TransactionHandler struct {
-	FName     string   `json:"familyName"`
-	FVersions []string `json:"familyVersions"`
-	NSpace    []string `json:"nameSpace"`
-	ActionMap map[string]func(request *processor_pb2.TpProcessRequest, context *processor.Context) error
-	GetAction func(request *processor_pb2.TpProcessRequest) (func(request *processor_pb2.TpProcessRequest, context *processor.Context) error, error)
+	FName       string   `json:"familyName"`
+	FVersions   []string `json:"familyVersions"`
+	NSpace      []string `json:"nameSpace"`
+	SubHandlers map[string]SubHandler
+	SubHandlerDelegate
 }
 
 // FamilyName ...
@@ -34,19 +41,21 @@ func (t *TransactionHandler) Namespaces() []string {
 
 // Apply ...
 func (t *TransactionHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
-	fn, err := t.GetAction(request)
+	subHandler, err := t.SubHandlerDelegate.GetSubHandler(request, t.SubHandlers)
 	if err != nil {
 		return err
 	}
-	return fn(request, context)
+
+	return subHandler.Handle(request, context)
 }
 
 // NewTransactionHandler ...
-func NewTransactionHandler(familyName, familyVersions, namespace string, actionMap map[string]func(request *processor_pb2.TpProcessRequest, context *processor.Context) error) *TransactionHandler {
+func NewTransactionHandler(familyName, familyVersions, namespace string, subHandlerDelegate SubHandlerDelegate, subHandlers map[string]SubHandler) *TransactionHandler {
 	return &TransactionHandler{
-		FName:     familyName,
-		FVersions: []string{familyVersions},
-		NSpace:    []string{namespace},
-		ActionMap: actionMap,
+		FName:              familyName,
+		FVersions:          []string{familyVersions},
+		NSpace:             []string{namespace},
+		SubHandlerDelegate: subHandlerDelegate,
+		SubHandlers:        subHandlers,
 	}
 }

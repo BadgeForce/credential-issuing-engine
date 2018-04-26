@@ -1,7 +1,11 @@
 package accounts
 
 import (
-	pb "github.com/BadgeForce/badgeforce-chain-node/accounts/accounts_pb"
+	"fmt"
+	"syscall"
+
+	"github.com/BadgeForce/badgeforce-chain-node/accounts/account"
+	"github.com/BadgeForce/badgeforce-chain-node/accounts/payload"
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	"github.com/gogo/protobuf/proto"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
@@ -23,7 +27,7 @@ var (
 )
 
 func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
-	var accountData pb.Account_PublicData
+	var accountData account.Account_PublicData
 	err := proto.Unmarshal(request.GetPayload(), &accountData)
 	if err != nil {
 		logger.Error(err)
@@ -39,8 +43,36 @@ func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *pr
 	return nil
 }
 
-func NewAccountsTP() *common.TransactionHandler {
-	actionMap := make(map[string]func(request *processor_pb2.TpProcessRequest, context *processor.Context) error)
-	actionMap[STOREPUBLICDATA] = StorePublicDataHandler
-	return common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, Namespace, actionMap)
+func Delegate(request *processor_pb2.TpProcessRequest, subHandlers map[string]common.SubHandler) (common.SubHandler, error) {
+	var action payload.PayloadHandler
+	var subHandler common.SubHandler
+	err := proto.Unmarshal(request.GetPayload(), &action)
+	if err != nil {
+		logger.Error(err)
+		return subHandler, &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
+	}
+
+	if subHandler, exists := subHandlers[action.GetAction()]; exists {
+		return subHandler, nil
+	}
+
+	return subHandler, &processor.InvalidTransactionError{Msg: fmt.Sprintf("Invalid action for transaction: %v", action.GetAction())}
+}
+
+func NewAccountsTP(validator string) *processor.TransactionProcessor {
+	subHandlers := make(map[string]common.SubHandler)
+	subHandlers[STOREPUBLICDATA] = common.SubHandler{
+		Handle: StorePublicDataHandler,
+	}
+
+	subHandlerDelegate := common.SubHandlerDelegate{
+		GetSubHandler: Delegate,
+	}
+
+	accountsHandler := common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, Namespace, subHandlerDelegate, subHandlers)
+
+	processor := processor.NewTransactionProcessor(validator)
+	processor.AddHandler(accountsHandler)
+	processor.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)
+	return processor
 }
