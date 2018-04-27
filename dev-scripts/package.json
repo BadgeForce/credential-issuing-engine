@@ -5,6 +5,7 @@
   "license": "MIT",
   "dependencies": {
     "cbor": "^4.0.0",
+    "google-protobuf": "^3.5.0",
     "sawtooth-sdk": "^1.0.2"
   }
 }

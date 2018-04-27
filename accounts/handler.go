@@ -8,6 +8,7 @@ import (
 	"github.com/BadgeForce/badgeforce-chain-node/accounts/payload"
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/ptypes"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
 	"github.com/rberg2/sawtooth-go-sdk/protobuf/processor_pb2"
@@ -26,12 +27,12 @@ var (
 	FAMILYVERSION = "1.0"
 )
 
-func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
+func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, payload *payload.PayloadHandler) error {
 	var accountData account.Account_PublicData
-	err := proto.Unmarshal(request.GetPayload(), &accountData)
+	err := ptypes.UnmarshalAny(payload.Data.Data, &accountData)
 	if err != nil {
 		logger.Error(err)
-		return &processor.InvalidTransactionError{Msg: "Invalid public account data"}
+		return &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
 	}
 	accountState := NewState(context)
 	err = accountState.StorePublicData(request.GetHeader().GetSignerPublicKey(), accountData)
@@ -43,20 +44,21 @@ func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *pr
 	return nil
 }
 
-func Delegate(request *processor_pb2.TpProcessRequest, subHandlers map[string]common.SubHandler) (common.SubHandler, error) {
+func Delegate(request *processor_pb2.TpProcessRequest, subHandlers map[string]common.SubHandler) (common.SubHandler, *payload.PayloadHandler, error) {
 	var action payload.PayloadHandler
 	var subHandler common.SubHandler
 	err := proto.Unmarshal(request.GetPayload(), &action)
 	if err != nil {
 		logger.Error(err)
-		return subHandler, &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
+		return subHandler, nil, &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
 	}
 
+	logger.Infof("payload %v -----------", action.String())
 	if subHandler, exists := subHandlers[action.GetAction()]; exists {
-		return subHandler, nil
+		return subHandler, &action, nil
 	}
 
-	return subHandler, &processor.InvalidTransactionError{Msg: fmt.Sprintf("Invalid action for transaction: %v", action.GetAction())}
+	return subHandler, nil, &processor.InvalidTransactionError{Msg: fmt.Sprintf("Invalid action for transaction: %v", action.GetAction())}
 }
 
 func NewAccountsTP(validator string) *processor.TransactionProcessor {

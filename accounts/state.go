@@ -43,12 +43,14 @@ func (s *AccountState) StorePublicData(publicKey string, data account.Account_Pu
 	address := common.MakeAddress(publicKey, Namespace)
 	b, err := proto.Marshal(&data)
 	if err != nil {
+		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Invalid data format"}
 	}
 	_, err = s.context.SetState(map[string][]byte{
 		address: b,
 	})
 	if err != nil {
+		logger.Errorf("ERROR", err, address)
 		return &processor.InternalError{Msg: "Could not set state"}
 	}
 

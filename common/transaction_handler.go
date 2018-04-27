@@ -1,6 +1,7 @@
 package common
 
 import (
+	"github.com/BadgeForce/badgeforce-chain-node/accounts/payload"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
 	"github.com/rberg2/sawtooth-go-sdk/protobuf/processor_pb2"
@@ -9,10 +10,10 @@ import (
 var logger *logging.Logger = logging.Get()
 
 type SubHandler struct {
-	Handle func(request *processor_pb2.TpProcessRequest, context *processor.Context) error
+	Handle func(request *processor_pb2.TpProcessRequest, context *processor.Context, payload *payload.PayloadHandler) error
 }
 type SubHandlerDelegate struct {
-	GetSubHandler func(request *processor_pb2.TpProcessRequest, subHandlers map[string]SubHandler) (SubHandler, error)
+	GetSubHandler func(request *processor_pb2.TpProcessRequest, subHandlers map[string]SubHandler) (SubHandler, *payload.PayloadHandler, error)
 }
 
 // TransactionHandler ...
@@ -41,12 +42,12 @@ func (t *TransactionHandler) Namespaces() []string {
 
 // Apply ...
 func (t *TransactionHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
-	subHandler, err := t.SubHandlerDelegate.GetSubHandler(request, t.SubHandlers)
+	subHandler, payload, err := t.SubHandlerDelegate.GetSubHandler(request, t.SubHandlers)
 	if err != nil {
 		return err
 	}
 
-	return subHandler.Handle(request, context)
+	return subHandler.Handle(request, context, payload)
 }
 
 // NewTransactionHandler ...

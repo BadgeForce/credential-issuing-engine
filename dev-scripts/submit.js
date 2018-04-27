@@ -4,31 +4,46 @@ const {createHash} = require('crypto')
 const {protobuf} = require('sawtooth-sdk')
 const request = require('request')
 const fs = require('fs');
-
+const accounts = require('./protos/account/proto/account_pb');
+const payloads = require('./protos/payload/proto/payload_pb');
 
 const context = createContext('secp256k1')
 const pk = Buffer.from("e3ddee618d8a8864481e71021e42ed46c3ab410ab1ad7cdf0ff31f6d61739275", 'hex')
 const priv = new Secp256k1PrivateKey(pk)
 const signer = new CryptoFactory(context).newSigner(priv)
 const cbor = require('cbor')
+const proto = require('google-protobuf');
+const gprotobuf = require('google-protobuf/google/protobuf/any_pb.js');
+const account = new accounts.Account();
+const publicData = new accounts.Account.PublicData();
 
-const payload = {
-    action: "GET_BALANCEOF",
-    address: "02ccb8bc17397c55242a27d1681bf48b5b40a734205760882cd83f92aca4f1cf45"
-}
+publicData.setName("Khalil Claybon");
+publicData.setDateofbirth("November 16");
+publicData.setAddress("1100 Frank E")
+account.setPublickey(signer.getPublicKey().asHex());
+account.setPublicdata(publicData);
 
-const payloadBytes = cbor.encode(payload)
+console.log(account);
 
-const namespace = createHash('sha512').update('props_token').digest('hex').substring(0, 6)
-const stateAddress = createHash('sha512').update("balances").digest('hex').toLowerCase().substring(0, 64)
+const data = new gprotobuf.Any()
+data.setValue(publicData.serializeBinary());
+data.setTypeUrl(`github.com/BadgeForce/badgeforce-chain-node/accounts/accounts/account.Account.PublicData`);
 
-console.log("stateaddr", stateAddress)
+const payloadData = new payloads.AnyData()
+payloadData.setData(data);
+const payload = new payloads.PayloadHandler();
+payload.setAction("store_public_data");
+payload.setData(payloadData);
 
-const inputs = namespace.concat(stateAddress);
-console.log("Inputs",inputs, "\n")
+const payloadBytes = payload.serializeBinary();
+
+const prefix = createHash('sha512').update('accounts').digest('hex').substring(0, 6)
+const namespace = createHash('sha512').update(signer.getPublicKey().asHex()).digest('hex').toLowerCase().substring(0, 64)
+
+const inputs = prefix.concat(namespace);
 
 const transactionHeaderBytes = protobuf.TransactionHeader.encode({
-    familyName: 'propstoken',
+    familyName: 'badgeforce_accounts',
     familyVersion: '1.0',
     inputs: [inputs],
     outputs: [inputs],

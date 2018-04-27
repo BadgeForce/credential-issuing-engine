@@ -244,6 +244,10 @@ github-from-package@0.0.0:
   version "0.0.0"
   resolved "https://registry.yarnpkg.com/github-from-package/-/github-from-package-0.0.0.tgz#97fb5d96bfde8973313f20e8288ef9a167fa64ce"
 
+google-protobuf@^3.5.0:
+  version "3.5.0"
+  resolved "https://registry.yarnpkg.com/google-protobuf/-/google-protobuf-3.5.0.tgz#b8cc63c74d83457bd8a9a904503c8efb26bca339"
+
 has-unicode@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/has-unicode/-/has-unicode-2.0.1.tgz#e0e6fe6a28cf51138855e086d1691e771de2a8b9"
