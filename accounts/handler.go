@@ -1,13 +1,10 @@
 package accounts
 
 import (
-	"fmt"
 	"syscall"
 
-	"github.com/BadgeForce/badgeforce-chain-node/accounts/account"
-	"github.com/BadgeForce/badgeforce-chain-node/accounts/payload"
+	"github.com/BadgeForce/badgeforce-chain-node/accounts/proto/badgeforce_pb"
 	"github.com/BadgeForce/badgeforce-chain-node/common"
-	"github.com/gogo/protobuf/proto"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
@@ -18,17 +15,14 @@ var logger = logging.Get()
 
 const (
 	FAMILYNAME = "badgeforce_accounts"
-
-	LOADACCOUNT     = "load_account_action"
-	STOREPUBLICDATA = "store_public_data"
 )
 
 var (
 	FAMILYVERSION = "1.0"
 )
 
-func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, payload *payload.PayloadHandler) error {
-	var accountData account.Account_PublicData
+func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, payload *badgeforce_pb.Payload) error {
+	var accountData badgeforce_pb.Account_PublicData
 	err := ptypes.UnmarshalAny(payload.Data.Data, &accountData)
 	if err != nil {
 		logger.Error(err)
@@ -44,34 +38,13 @@ func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *pr
 	return nil
 }
 
-func Delegate(request *processor_pb2.TpProcessRequest, subHandlers map[string]common.SubHandler) (common.SubHandler, *payload.PayloadHandler, error) {
-	var action payload.PayloadHandler
-	var subHandler common.SubHandler
-	err := proto.Unmarshal(request.GetPayload(), &action)
-	if err != nil {
-		logger.Error(err)
-		return subHandler, nil, &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
-	}
-
-	logger.Infof("payload %v -----------", action.String())
-	if subHandler, exists := subHandlers[action.GetAction()]; exists {
-		return subHandler, &action, nil
-	}
-
-	return subHandler, nil, &processor.InvalidTransactionError{Msg: fmt.Sprintf("Invalid action for transaction: %v", action.GetAction())}
-}
-
 func NewAccountsTP(validator string) *processor.TransactionProcessor {
 	subHandlers := make(map[string]common.SubHandler)
-	subHandlers[STOREPUBLICDATA] = common.SubHandler{
+	subHandlers[badgeforce_pb.PayloadAction_STOREPUBLICDATA.String()] = common.SubHandler{
 		Handle: StorePublicDataHandler,
 	}
 
-	subHandlerDelegate := common.SubHandlerDelegate{
-		GetSubHandler: Delegate,
-	}
-
-	accountsHandler := common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, Namespace, subHandlerDelegate, subHandlers)
+	accountsHandler := common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, Namespace, subHandlers)
 
 	processor := processor.NewTransactionProcessor(validator)
 	processor.AddHandler(accountsHandler)

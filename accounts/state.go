@@ -1,7 +1,7 @@
 package accounts
 
 import (
-	"github.com/BadgeForce/badgeforce-chain-node/accounts/account"
+	"github.com/BadgeForce/badgeforce-chain-node/accounts/proto/badgeforce_pb"
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	"github.com/gogo/protobuf/proto"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
@@ -23,8 +23,8 @@ func NewState(context *processor.Context) *AccountState {
 	}
 }
 
-func (s *AccountState) LoadAccount(publicKey string) (*account.Account, error) {
-	var accnt account.Account
+func (s *AccountState) LoadAccount(publicKey string) (*badgeforce_pb.Account, error) {
+	var accnt badgeforce_pb.Account
 	address := common.MakeAddress(publicKey, Namespace)
 	state, err := s.context.GetState([]string{address})
 	if err != nil {
@@ -35,10 +35,10 @@ func (s *AccountState) LoadAccount(publicKey string) (*account.Account, error) {
 		return &accnt, nil
 	}
 
-	return &account.Account{PublicKey: publicKey}, nil
+	return &badgeforce_pb.Account{PublicKey: publicKey}, nil
 }
 
-func (s *AccountState) StorePublicData(publicKey string, data account.Account_PublicData) error {
+func (s *AccountState) StorePublicData(publicKey string, data badgeforce_pb.Account_PublicData) error {
 	//validate this data
 	address := common.MakeAddress(publicKey, Namespace)
 	b, err := proto.Marshal(&data)

@@ -4,21 +4,20 @@ const {createHash} = require('crypto')
 const {protobuf} = require('sawtooth-sdk')
 const request = require('request')
 const fs = require('fs');
-const accounts = require('./protos/account/proto/account_pb');
-const payloads = require('./protos/payload/proto/payload_pb');
+const accounts = require('./protos/account_pb');
+const payloads = require('./protos/payload_pb');
 
 const context = createContext('secp256k1')
 const pk = Buffer.from("e3ddee618d8a8864481e71021e42ed46c3ab410ab1ad7cdf0ff31f6d61739275", 'hex')
 const priv = new Secp256k1PrivateKey(pk)
 const signer = new CryptoFactory(context).newSigner(priv)
-const cbor = require('cbor')
 const proto = require('google-protobuf');
 const gprotobuf = require('google-protobuf/google/protobuf/any_pb.js');
 const account = new accounts.Account();
 const publicData = new accounts.Account.PublicData();
 
 publicData.setName("Khalil Claybon");
-publicData.setDateofbirth("November 16");
+publicData.setDateofbirth("November 17");
 publicData.setAddress("1100 Frank E")
 account.setPublickey(signer.getPublicKey().asHex());
 account.setPublicdata(publicData);
@@ -27,12 +26,12 @@ console.log(account);
 
 const data = new gprotobuf.Any()
 data.setValue(publicData.serializeBinary());
-data.setTypeUrl(`github.com/BadgeForce/badgeforce-chain-node/accounts/accounts/account.Account.PublicData`);
+data.setTypeUrl(`github.com/BadgeForce/badgeforce-chain-node/accounts/proto/badgeforce_pb.Account.PublicData`);
 
 const payloadData = new payloads.AnyData()
 payloadData.setData(data);
-const payload = new payloads.PayloadHandler();
-payload.setAction("store_public_data");
+const payload = new payloads.Payload();
+payload.setAction(payloads.PayloadAction.STOREPUBLICDATA);
 payload.setData(payloadData);
 
 const payloadBytes = payload.serializeBinary();
@@ -88,15 +87,6 @@ const batchListBytes = protobuf.BatchList.encode({
     batches: [batch]
 }).finish()
 console.log(batchListBytes)
-// request.get({
-//     url: 'http://127.0.0.1:8008/batches',
-//     // body: batchListBytes,
-//     headers: {'Content-Type': 'application/json'}
-// }, (err, response) => {
-//     if (err) return console.log(err)
-//     console.log(response.body)
-// })
-
 console.log("priv", signer._privateKey.asHex())
 console.log("pub", signer.getPublicKey().asHex(), '\n')
 console.log("namespace", namespace);
