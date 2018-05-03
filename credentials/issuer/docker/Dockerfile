@@ -27,9 +27,9 @@ ENV PATH=$PATH:/usr/lib/go-1.9/bin
 RUN mkdir -p $GOPATH/src/github.com/BadgeForce/badgeforce-chain-node
 WORKDIR $GOPATH/src/github.com/BadgeForce/badgeforce-chain-node
 ADD . .
-WORKDIR ./accounts/transaction_processor
-RUN go get
-RUN go build -o accounts_transaction_processor .
+WORKDIR ./credentials/issuer/transaction_processor
+RUN go get 
+RUN go build -o issuer_transaction_processor .
 RUN rm /root/.ssh/id_rsa
 
 EXPOSE 4004/tcp

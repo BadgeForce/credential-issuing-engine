@@ -12,7 +12,7 @@
 # limitations under the License.
 # ------------------------------------------------------------------------------
 
-version: "2.1"
+version: "3.5"
 
 services:
 
@@ -23,6 +23,18 @@ services:
       - validator
     entrypoint: settings-tp -vv -C tcp://validator:4004
 
+  ipfs-node:
+    image: jbenet/go-ipfs:latest
+    container_name: ipfs-node
+    expose:
+      - 8080
+      - 4001
+      - 5001
+    ports:
+      - "8080:8080"
+      - "4001:4001"
+      - "5001:5001"
+  
   badgeforce-accounts:
     image: badgeforce-accounts:latest
     depends_on:
@@ -31,6 +43,19 @@ services:
     entrypoint: "bash -c \"\
           ./accounts_transaction_processor -vv -C tcp://validator:4004 \
         \""
+    networks: 
+      - badgeforce-blockchain
+  
+  badgeforce-issuer:
+    image: badgeforce-issuer:latest
+    depends_on:
+      - validator
+    container_name: badgeforce-issuer-latest
+    entrypoint: "bash -c \"\
+          ./issuer_transaction_processor -vv -C tcp://validator:4004 \
+        \""
+    networks: 
+      - badgeforce-blockchain
 
   validator:
     image: sawtooth-validator:latest
@@ -49,6 +74,9 @@ services:
           --bind component:tcp://eth0:4004 \
           --bind network:tcp://eth0:8800 \
         \""
+    networks: 
+      - badgeforce-blockchain
+
   rest-api:
     image: hyperledger/sawtooth-rest-api:1.0
     container_name: sawtooth-rest-api-default
@@ -57,6 +85,8 @@ services:
     depends_on:
       - validator
     entrypoint: sawtooth-rest-api -C tcp://validator:4004 --bind rest-api:8008
+    networks: 
+      - badgeforce-blockchain
 
   shell:
     image: hyperledger/sawtooth-all:1.0
@@ -67,3 +97,9 @@ services:
         sawtooth keygen && \
         tail -f /dev/null \
         \""
+    networks: 
+      - badgeforce-blockchain
+
+networks: 
+  badgeforce-blockchain:
+    name: badgeforcechain

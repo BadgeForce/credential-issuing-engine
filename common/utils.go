@@ -20,6 +20,6 @@ func ComputeNamespace(str string) string {
 }
 
 // MakeAddress . . .
-func MakeAddress(name, namespace string) string {
-	return namespace + Hexdigest(name)[:64]
+func MakeAddress(prefix, postfix string) string {
+	return prefix + Hexdigest(postfix)[:64]
 }

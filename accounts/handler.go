@@ -21,8 +21,9 @@ var (
 	FAMILYVERSION = "1.0"
 )
 
-func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, payload *badgeforce_pb.Payload) error {
+func StorePublicDataHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, data interface{}) error {
 	var accountData badgeforce_pb.Account_PublicData
+	payload := data.(badgeforce_pb.Payload)
 	err := ptypes.UnmarshalAny(payload.Data.Data, &accountData)
 	if err != nil {
 		logger.Error(err)

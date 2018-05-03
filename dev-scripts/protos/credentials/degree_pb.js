@@ -414,8 +414,9 @@ proto.issuer_pb.Core.toObject = function(includeInstance, msg) {
     issuer: jspb.Message.getFieldWithDefault(msg, 3, ""),
     recipient: jspb.Message.getFieldWithDefault(msg, 4, ""),
     dateEarned: jspb.Message.getFieldWithDefault(msg, 5, ""),
+    institutionid: jspb.Message.getFieldWithDefault(msg, 6, ""),
     expiration: (f = msg.getExpiration()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
-    signature: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    signature: jspb.Message.getFieldWithDefault(msg, 8, ""),
     badgeforceData: (f = msg.getBadgeforceData()) && proto.issuer_pb.VerifyHelperData.toObject(includeInstance, f)
   };
 
@@ -474,15 +475,19 @@ proto.issuer_pb.Core.deserializeBinaryFromReader = function(msg, reader) {
       msg.setDateEarned(value);
       break;
     case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setInstitutionid(value);
+      break;
+    case 7:
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setExpiration(value);
       break;
-    case 7:
+    case 8:
       var value = /** @type {string} */ (reader.readString());
       msg.setSignature(value);
       break;
-    case 8:
+    case 9:
       var value = new proto.issuer_pb.VerifyHelperData;
       reader.readMessage(value,proto.issuer_pb.VerifyHelperData.deserializeBinaryFromReader);
       msg.setBadgeforceData(value);
@@ -551,10 +556,17 @@ proto.issuer_pb.Core.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getInstitutionid();
+  if (f.length > 0) {
+    writer.writeString(
+      6,
+      f
+    );
+  }
   f = message.getExpiration();
   if (f != null) {
     writer.writeMessage(
-      6,
+      7,
       f,
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
     );
@@ -562,14 +574,14 @@ proto.issuer_pb.Core.serializeBinaryToWriter = function(message, writer) {
   f = message.getSignature();
   if (f.length > 0) {
     writer.writeString(
-      7,
+      8,
       f
     );
   }
   f = message.getBadgeforceData();
   if (f != null) {
     writer.writeMessage(
-      8,
+      9,
       f,
       proto.issuer_pb.VerifyHelperData.serializeBinaryToWriter
     );
@@ -653,18 +665,33 @@ proto.issuer_pb.Core.prototype.setDateEarned = function(value) {
 
 
 /**
- * optional google.protobuf.Timestamp expiration = 6;
+ * optional string institutionId = 6;
+ * @return {string}
+ */
+proto.issuer_pb.Core.prototype.getInstitutionid = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 6, ""));
+};
+
+
+/** @param {string} value */
+proto.issuer_pb.Core.prototype.setInstitutionid = function(value) {
+  jspb.Message.setProto3StringField(this, 6, value);
+};
+
+
+/**
+ * optional google.protobuf.Timestamp expiration = 7;
  * @return {?proto.google.protobuf.Timestamp}
  */
 proto.issuer_pb.Core.prototype.getExpiration = function() {
   return /** @type{?proto.google.protobuf.Timestamp} */ (
-    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 6));
+    jspb.Message.getWrapperField(this, google_protobuf_timestamp_pb.Timestamp, 7));
 };
 
 
 /** @param {?proto.google.protobuf.Timestamp|undefined} value */
 proto.issuer_pb.Core.prototype.setExpiration = function(value) {
-  jspb.Message.setWrapperField(this, 6, value);
+  jspb.Message.setWrapperField(this, 7, value);
 };
 
 
@@ -678,38 +705,38 @@ proto.issuer_pb.Core.prototype.clearExpiration = function() {
  * @return {!boolean}
  */
 proto.issuer_pb.Core.prototype.hasExpiration = function() {
-  return jspb.Message.getField(this, 6) != null;
+  return jspb.Message.getField(this, 7) != null;
 };
 
 
 /**
- * optional string signature = 7;
+ * optional string signature = 8;
  * @return {string}
  */
 proto.issuer_pb.Core.prototype.getSignature = function() {
-  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
 };
 
 
 /** @param {string} value */
 proto.issuer_pb.Core.prototype.setSignature = function(value) {
-  jspb.Message.setProto3StringField(this, 7, value);
+  jspb.Message.setProto3StringField(this, 8, value);
 };
 
 
 /**
- * optional VerifyHelperData badgeforce_data = 8;
+ * optional VerifyHelperData badgeforce_data = 9;
  * @return {?proto.issuer_pb.VerifyHelperData}
  */
 proto.issuer_pb.Core.prototype.getBadgeforceData = function() {
   return /** @type{?proto.issuer_pb.VerifyHelperData} */ (
-    jspb.Message.getWrapperField(this, proto.issuer_pb.VerifyHelperData, 8));
+    jspb.Message.getWrapperField(this, proto.issuer_pb.VerifyHelperData, 9));
 };
 
 
 /** @param {?proto.issuer_pb.VerifyHelperData|undefined} value */
 proto.issuer_pb.Core.prototype.setBadgeforceData = function(value) {
-  jspb.Message.setWrapperField(this, 8, value);
+  jspb.Message.setWrapperField(this, 9, value);
 };
 
 
@@ -723,7 +750,7 @@ proto.issuer_pb.Core.prototype.clearBadgeforceData = function() {
  * @return {!boolean}
  */
 proto.issuer_pb.Core.prototype.hasBadgeforceData = function() {
-  return jspb.Message.getField(this, 8) != null;
+  return jspb.Message.getField(this, 9) != null;
 };
 
 

@@ -25,7 +25,7 @@ func NewState(context *processor.Context) *AccountState {
 
 func (s *AccountState) LoadAccount(publicKey string) (*badgeforce_pb.Account, error) {
 	var accnt badgeforce_pb.Account
-	address := common.MakeAddress(publicKey, Namespace)
+	address := common.MakeAddress(Namespace, publicKey)
 	state, err := s.context.GetState([]string{address})
 	if err != nil {
 		return nil, &processor.InternalError{Msg: "Could not GetState"}
@@ -40,7 +40,7 @@ func (s *AccountState) LoadAccount(publicKey string) (*badgeforce_pb.Account, er
 
 func (s *AccountState) StorePublicData(publicKey string, data badgeforce_pb.Account_PublicData) error {
 	//validate this data
-	address := common.MakeAddress(publicKey, Namespace)
+	address := common.MakeAddress(Namespace, publicKey)
 	b, err := proto.Marshal(&data)
 	if err != nil {
 		logger.Error(err)

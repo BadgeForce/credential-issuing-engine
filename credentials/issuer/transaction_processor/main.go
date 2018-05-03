@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/BadgeForce/badgeforce-chain-node/accounts"
+	"github.com/BadgeForce/badgeforce-chain-node/credentials/issuer"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
 
 	flags "github.com/jessevdk/go-flags"
@@ -49,7 +49,7 @@ func main() {
 	// 	logger.SetLevel(logging.WARN)
 	// }
 
-	processor := accounts.NewAccountsTP(validator)
+	processor := issuer.NewCredentialsTP(validator)
 	err = processor.Start()
 	if err != nil {
 		logger.Error("Processor stopped: ", err)

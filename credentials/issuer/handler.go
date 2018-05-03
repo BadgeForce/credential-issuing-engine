@@ -1,6 +1,10 @@
 package issuer
 
 import (
+	"fmt"
+	"syscall"
+
+	"github.com/BadgeForce/badgeforce-chain-node/common"
 	"github.com/BadgeForce/badgeforce-chain-node/credentials/academic"
 	"github.com/BadgeForce/badgeforce-chain-node/credentials/issuance"
 	issuer_pb "github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb"
@@ -21,15 +25,15 @@ var (
 )
 
 // IssueCredentialHandler ...
-func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, payload *issuer_pb.Payload) error {
+func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, data interface{}) error {
 	var coreData issuer_pb.Core
+	payload := data.(*issuer_pb.Payload)
 	err := ptypes.UnmarshalAny(payload.Data.Data, &coreData)
 	if err != nil {
 		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
 	}
 
-	// set signature , check issuer property
 	poiHash, err := ComputeIntegrityHash(&coreData)
 	if err != nil {
 		logger.Error(err)
@@ -41,39 +45,40 @@ func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *pr
 		RevokationStatus:     false,
 	}
 
-	issuance := issuer_pb.Issuance{
-		Signature: coreData.GetSignature(),
-		IssuerPublicKey: request.GetHeader().GetSignerPublicKey(),
-		RecipientPublicKey: coreData.GetRecipient(), 
-		ProofOfIntegrityHash: coreData.GetBadgeforceData().GetProofOfIntegrityHash().GetHash() 
+	newIssuance := &issuer_pb.Issuance{
+		Signature:            coreData.GetSignature(),
+		IssuerPublicKey:      request.GetHeader().GetSignerPublicKey(),
+		RecipientPublicKey:   coreData.GetRecipient(),
+		ProofOfIntegrityHash: coreData.GetBadgeforceData().GetProofOfIntegrityHash(),
 	}
 
-	
 	issuanceState := issuance.NewIssuanceState(context)
-	// save issuance
+	err = issuanceState.SaveIssuance(newIssuance)
+	if err != nil {
+		return &processor.InternalError{Msg: "Could not save issuance"}
+	}
+
 	credentialState := academic.NewAcademicState(context)
-	// save ipfs hash in credentialState
-	
-	// accountState := NewState(context)
-	// err = accountState.StorePublicData(request.GetHeader().GetSignerPublicKey(), accountData)
-	// if err != nil {
-	// 	logger.Error(err)
-	// 	return &processor.InvalidTransactionError{Msg: "Could not store public data"}
-	// }
+	logger.Debug(coreData.String())
+	err = credentialState.SaveCredential(coreData)
+	if err != nil {
+		return &processor.InternalError{Msg: fmt.Sprintf("Could not save SaveCredential %v", err.Error())}
+	}
 
 	return nil
 }
 
-// func NewAccountsTP(validator string) *processor.TransactionProcessor {
-// 	subHandlers := make(map[string]common.SubHandler)
-// 	subHandlers[badgeforce_pb.PayloadAction_STOREPUBLICDATA.String()] = common.SubHandler{
-// 		Handle: StorePublicDataHandler,
-// 	}
+// NewCredentialsTP ...
+func NewCredentialsTP(validator string) *processor.TransactionProcessor {
+	subHandlers := make(map[string]common.SubHandler)
+	subHandlers[issuer_pb.PayloadAction_ISSUE.String()] = common.SubHandler{
+		Handle: IssueCredentialHandler,
+	}
 
-// 	accountsHandler := common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, Namespace, subHandlers)
+	credentialsHandler := common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, academic.Namespace, subHandlers)
 
-// 	processor := processor.NewTransactionProcessor(validator)
-// 	processor.AddHandler(accountsHandler)
-// 	processor.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)
-// 	return processor
-// }
+	processor := processor.NewTransactionProcessor(validator)
+	processor.AddHandler(credentialsHandler)
+	processor.ShutdownOnSignal(syscall.SIGINT, syscall.SIGTERM)
+	return processor
+}
