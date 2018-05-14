@@ -2,56 +2,87 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"os"
 
+	"github.com/BadgeForce/badgeforce-chain-node/credentials/academic"
 	"github.com/BadgeForce/badgeforce-chain-node/credentials/issuer"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
-
-	flags "github.com/jessevdk/go-flags"
+	cli "gopkg.in/urfave/cli.v1"
 )
 
-type Opts struct {
-	Verbose []bool `short:"v" long:"verbose" description:"Increase verbosity"`
-	Connect string `short:"C" long:"connect" description:"Validator component endpoint to connect to" default:"tcp://localhost:4004"`
-	Queue   uint   `long:"max-queue-size" description:"Set the maximum queue size before rejecting process requests" default:"100"`
-	Threads uint   `long:"worker-thread-count" description:"Set the number of worker threads to use for processing requests in parallel" default:"0"`
-}
+var (
+	logger = logging.Get()
+
+	Verbose int
+	verbose = cli.IntFlag{
+		Name:        "verbosity",
+		Value:       3,
+		Usage:       "Specify verbosity. 3=warn 2=debug, 1=info",
+		Destination: &Verbose,
+	}
+
+	Validator string
+	validator = cli.StringFlag{
+		Name:        "validator, c",
+		Value:       "tcp://localhost:4004",
+		Usage:       "Validator component endpoint to connect to",
+		Destination: &Validator,
+	}
+
+	IPFS string
+	ipfs = cli.StringFlag{
+		Name:        "ipfs-node, ipfs",
+		Value:       "tcp://localhost:4004",
+		Usage:       "IPFS component endpoint to connect to",
+		Destination: &IPFS,
+	}
+
+	Queue int
+	queue = cli.IntFlag{
+		Name:        "max-queue-size, mqs",
+		Value:       100,
+		Usage:       "Set the maximum queue size before rejecting process requests",
+		Destination: &Queue,
+	}
+
+	Threads int
+	threads = cli.IntFlag{
+		Name:        "worker-thread-count, wtc",
+		Value:       0,
+		Usage:       "Set the number of worker threads to use for processing requests in parallel",
+		Destination: &Threads,
+	}
+
+	appFlags = []cli.Flag{verbose, validator, ipfs, queue, threads}
+
+	startTPCommnad = cli.Command{
+		Name:    "run",
+		Aliases: []string{"r"},
+		Usage:   "Start the transaction processor",
+		Action: func(c *cli.Context) error {
+			logger.SetLevel(Verbose * 10)
+
+			academic.IPFSCONN = IPFS
+			processor := issuer.NewCredentialsTP(Validator)
+			err := processor.Start()
+			if err != nil {
+				return cli.NewExitError(fmt.Errorf("Processor stopped: %v", err), 2)
+			}
+
+			return nil
+		},
+		Flags: appFlags,
+	}
+)
 
 func main() {
-	var opts Opts
+	app := cli.NewApp()
+	app.Name = "badgeforce-issuer"
+	app.Commands = []cli.Command{startTPCommnad}
 
-	logger := logging.Get()
-
-	parser := flags.NewParser(&opts, flags.Default)
-	remaining, err := parser.Parse()
+	err := app.Run(os.Args)
 	if err != nil {
-		if flagsErr, ok := err.(*flags.Error); ok && flagsErr.Type == flags.ErrHelp {
-			os.Exit(0)
-		} else {
-			logger.Errorf("Failed to parse args: %v", err)
-			os.Exit(2)
-		}
-	}
-
-	if len(remaining) > 0 {
-		fmt.Printf("Error: Unrecognized arguments passed: %v\n", remaining)
-		os.Exit(2)
-	}
-
-	validator := opts.Connect
-
-	// switch len(opts.Verbose) {
-	// case 2:
-	// 	logger.SetLevel(logging.DEBUG)
-	// case 1:
-	// 	logger.SetLevel(logging.INFO)
-	// default:
-	// 	logger.SetLevel(logging.WARN)
-	// }
-
-	processor := issuer.NewCredentialsTP(validator)
-	err = processor.Start()
-	if err != nil {
-		logger.Error("Processor stopped: ", err)
+		log.Fatal(err)
 	}
 }

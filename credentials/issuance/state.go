@@ -45,13 +45,13 @@ func (s *IssuanceState) GetIssuance(signature string) (*issuer_pb.Issuance, erro
 func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) error {
 	//validate this data
 	address := common.MakeAddress(Namespace, issuance.GetSignature()+issuance.GetIssuerPublicKey())
-	_, err := proto.Marshal(issuance)
+	b, err := proto.Marshal(issuance)
 	if err != nil {
 		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Invalid data format"}
 	}
 	_, err = s.Context.SetState(map[string][]byte{
-		address: []byte(issuance.String()),
+		address: b,
 	})
 	if err != nil {
 		logger.Errorf("ERROR", err, address)

@@ -29,9 +29,9 @@ WORKDIR $GOPATH/src/github.com/BadgeForce/badgeforce-chain-node
 ADD . .
 WORKDIR ./credentials/issuer/transaction_processor
 RUN go get 
-RUN go build -o issuer_transaction_processor .
+RUN go build -o badgeforce-issuer .
 RUN rm /root/.ssh/id_rsa
 
 EXPOSE 4004/tcp
 
-ENTRYPOINT ["./issuer_transaction_processor"]
+ENTRYPOINT ["./badgeforce-issuer"]

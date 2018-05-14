@@ -41,7 +41,12 @@ func (t *TransactionHandler) Namespaces() []string {
 
 // Apply ...
 func (t *TransactionHandler) Apply(request *processor_pb2.TpProcessRequest, context *processor.Context) error {
-	return t.DelegateTransaction(request, context)
+	err := t.DelegateTransaction(request, context)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // DelegateTransaction uses the action field on the payload interface to delegate the transaction to the proper subhandler

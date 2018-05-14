@@ -34,6 +34,8 @@ services:
       - "8080:8080"
       - "4001:4001"
       - "5001:5001"
+    networks: 
+      - badgeforce-blockchain
   
   badgeforce-accounts:
     image: badgeforce-accounts:latest
@@ -41,7 +43,7 @@ services:
       - validator
     container_name: badgeforce-accounts-latest
     entrypoint: "bash -c \"\
-          ./accounts_transaction_processor -vv -C tcp://validator:4004 \
+          ./accounts_transaction_processor -vv -C tcp://validator:4004\
         \""
     networks: 
       - badgeforce-blockchain
@@ -52,10 +54,11 @@ services:
       - validator
     container_name: badgeforce-issuer-latest
     entrypoint: "bash -c \"\
-          ./issuer_transaction_processor -vv -C tcp://validator:4004 \
+          ./badgeforce-issuer run --verbosity 2 --validator tcp://validator:4004 --ipfs-node http://ipfs-node:5001\
         \""
     networks: 
       - badgeforce-blockchain
+
 
   validator:
     image: sawtooth-validator:latest
