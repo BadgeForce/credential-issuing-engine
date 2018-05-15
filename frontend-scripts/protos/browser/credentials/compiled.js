@@ -452,193 +452,6 @@ $root.issuer_pb = (function() {
         return AnyData;
     })();
 
-    issuer_pb.ProofOfIntegrity = (function() {
-
-        /**
-         * Properties of a ProofOfIntegrity.
-         * @memberof issuer_pb
-         * @interface IProofOfIntegrity
-         * @property {string|null} [hash] ProofOfIntegrity hash
-         */
-
-        /**
-         * Constructs a new ProofOfIntegrity.
-         * @memberof issuer_pb
-         * @classdesc Represents a ProofOfIntegrity.
-         * @implements IProofOfIntegrity
-         * @constructor
-         * @param {issuer_pb.IProofOfIntegrity=} [properties] Properties to set
-         */
-        function ProofOfIntegrity(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * ProofOfIntegrity hash.
-         * @member {string} hash
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @instance
-         */
-        ProofOfIntegrity.prototype.hash = "";
-
-        /**
-         * Creates a new ProofOfIntegrity instance using the specified properties.
-         * @function create
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {issuer_pb.IProofOfIntegrity=} [properties] Properties to set
-         * @returns {issuer_pb.ProofOfIntegrity} ProofOfIntegrity instance
-         */
-        ProofOfIntegrity.create = function create(properties) {
-            return new ProofOfIntegrity(properties);
-        };
-
-        /**
-         * Encodes the specified ProofOfIntegrity message. Does not implicitly {@link issuer_pb.ProofOfIntegrity.verify|verify} messages.
-         * @function encode
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {issuer_pb.IProofOfIntegrity} message ProofOfIntegrity message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        ProofOfIntegrity.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.hash != null && message.hasOwnProperty("hash"))
-                writer.uint32(/* id 1, wireType 2 =*/10).string(message.hash);
-            return writer;
-        };
-
-        /**
-         * Encodes the specified ProofOfIntegrity message, length delimited. Does not implicitly {@link issuer_pb.ProofOfIntegrity.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {issuer_pb.IProofOfIntegrity} message ProofOfIntegrity message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        ProofOfIntegrity.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a ProofOfIntegrity message from the specified reader or buffer.
-         * @function decode
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {issuer_pb.ProofOfIntegrity} ProofOfIntegrity
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        ProofOfIntegrity.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.issuer_pb.ProofOfIntegrity();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1:
-                    message.hash = reader.string();
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a ProofOfIntegrity message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {issuer_pb.ProofOfIntegrity} ProofOfIntegrity
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        ProofOfIntegrity.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a ProofOfIntegrity message.
-         * @function verify
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        ProofOfIntegrity.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.hash != null && message.hasOwnProperty("hash"))
-                if (!$util.isString(message.hash))
-                    return "hash: string expected";
-            return null;
-        };
-
-        /**
-         * Creates a ProofOfIntegrity message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {issuer_pb.ProofOfIntegrity} ProofOfIntegrity
-         */
-        ProofOfIntegrity.fromObject = function fromObject(object) {
-            if (object instanceof $root.issuer_pb.ProofOfIntegrity)
-                return object;
-            var message = new $root.issuer_pb.ProofOfIntegrity();
-            if (object.hash != null)
-                message.hash = String(object.hash);
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a ProofOfIntegrity message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @static
-         * @param {issuer_pb.ProofOfIntegrity} message ProofOfIntegrity
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        ProofOfIntegrity.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults)
-                object.hash = "";
-            if (message.hash != null && message.hasOwnProperty("hash"))
-                object.hash = message.hash;
-            return object;
-        };
-
-        /**
-         * Converts this ProofOfIntegrity to JSON.
-         * @function toJSON
-         * @memberof issuer_pb.ProofOfIntegrity
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        ProofOfIntegrity.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        return ProofOfIntegrity;
-    })();
-
     issuer_pb.Issuance = (function() {
 
         /**
@@ -648,7 +461,8 @@ $root.issuer_pb = (function() {
          * @property {string|null} [signature] Issuance signature
          * @property {string|null} [issuerPublicKey] Issuance issuerPublicKey
          * @property {string|null} [recipientPublicKey] Issuance recipientPublicKey
-         * @property {issuer_pb.IProofOfIntegrity|null} [proofOfIntegrityHash] Issuance proofOfIntegrityHash
+         * @property {boolean|null} [revokationStatus] Issuance revokationStatus
+         * @property {string|null} [proofOfIntegrityHash] Issuance proofOfIntegrityHash
          */
 
         /**
@@ -691,12 +505,20 @@ $root.issuer_pb = (function() {
         Issuance.prototype.recipientPublicKey = "";
 
         /**
-         * Issuance proofOfIntegrityHash.
-         * @member {issuer_pb.IProofOfIntegrity|null|undefined} proofOfIntegrityHash
+         * Issuance revokationStatus.
+         * @member {boolean} revokationStatus
          * @memberof issuer_pb.Issuance
          * @instance
          */
-        Issuance.prototype.proofOfIntegrityHash = null;
+        Issuance.prototype.revokationStatus = false;
+
+        /**
+         * Issuance proofOfIntegrityHash.
+         * @member {string} proofOfIntegrityHash
+         * @memberof issuer_pb.Issuance
+         * @instance
+         */
+        Issuance.prototype.proofOfIntegrityHash = "";
 
         /**
          * Creates a new Issuance instance using the specified properties.
@@ -728,8 +550,10 @@ $root.issuer_pb = (function() {
                 writer.uint32(/* id 2, wireType 2 =*/18).string(message.issuerPublicKey);
             if (message.recipientPublicKey != null && message.hasOwnProperty("recipientPublicKey"))
                 writer.uint32(/* id 3, wireType 2 =*/26).string(message.recipientPublicKey);
+            if (message.revokationStatus != null && message.hasOwnProperty("revokationStatus"))
+                writer.uint32(/* id 4, wireType 0 =*/32).bool(message.revokationStatus);
             if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash"))
-                $root.issuer_pb.ProofOfIntegrity.encode(message.proofOfIntegrityHash, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
+                writer.uint32(/* id 5, wireType 2 =*/42).string(message.proofOfIntegrityHash);
             return writer;
         };
 
@@ -773,8 +597,11 @@ $root.issuer_pb = (function() {
                 case 3:
                     message.recipientPublicKey = reader.string();
                     break;
-                case 7:
-                    message.proofOfIntegrityHash = $root.issuer_pb.ProofOfIntegrity.decode(reader, reader.uint32());
+                case 4:
+                    message.revokationStatus = reader.bool();
+                    break;
+                case 5:
+                    message.proofOfIntegrityHash = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -820,11 +647,12 @@ $root.issuer_pb = (function() {
             if (message.recipientPublicKey != null && message.hasOwnProperty("recipientPublicKey"))
                 if (!$util.isString(message.recipientPublicKey))
                     return "recipientPublicKey: string expected";
-            if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash")) {
-                var error = $root.issuer_pb.ProofOfIntegrity.verify(message.proofOfIntegrityHash);
-                if (error)
-                    return "proofOfIntegrityHash." + error;
-            }
+            if (message.revokationStatus != null && message.hasOwnProperty("revokationStatus"))
+                if (typeof message.revokationStatus !== "boolean")
+                    return "revokationStatus: boolean expected";
+            if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash"))
+                if (!$util.isString(message.proofOfIntegrityHash))
+                    return "proofOfIntegrityHash: string expected";
             return null;
         };
 
@@ -846,11 +674,10 @@ $root.issuer_pb = (function() {
                 message.issuerPublicKey = String(object.issuerPublicKey);
             if (object.recipientPublicKey != null)
                 message.recipientPublicKey = String(object.recipientPublicKey);
-            if (object.proofOfIntegrityHash != null) {
-                if (typeof object.proofOfIntegrityHash !== "object")
-                    throw TypeError(".issuer_pb.Issuance.proofOfIntegrityHash: object expected");
-                message.proofOfIntegrityHash = $root.issuer_pb.ProofOfIntegrity.fromObject(object.proofOfIntegrityHash);
-            }
+            if (object.revokationStatus != null)
+                message.revokationStatus = Boolean(object.revokationStatus);
+            if (object.proofOfIntegrityHash != null)
+                message.proofOfIntegrityHash = String(object.proofOfIntegrityHash);
             return message;
         };
 
@@ -871,7 +698,8 @@ $root.issuer_pb = (function() {
                 object.signature = "";
                 object.issuerPublicKey = "";
                 object.recipientPublicKey = "";
-                object.proofOfIntegrityHash = null;
+                object.revokationStatus = false;
+                object.proofOfIntegrityHash = "";
             }
             if (message.signature != null && message.hasOwnProperty("signature"))
                 object.signature = message.signature;
@@ -879,8 +707,10 @@ $root.issuer_pb = (function() {
                 object.issuerPublicKey = message.issuerPublicKey;
             if (message.recipientPublicKey != null && message.hasOwnProperty("recipientPublicKey"))
                 object.recipientPublicKey = message.recipientPublicKey;
+            if (message.revokationStatus != null && message.hasOwnProperty("revokationStatus"))
+                object.revokationStatus = message.revokationStatus;
             if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash"))
-                object.proofOfIntegrityHash = $root.issuer_pb.ProofOfIntegrity.toObject(message.proofOfIntegrityHash, options);
+                object.proofOfIntegrityHash = message.proofOfIntegrityHash;
             return object;
         };
 
@@ -905,6 +735,7 @@ $root.issuer_pb = (function() {
          * @memberof issuer_pb
          * @interface IAcademicCredential
          * @property {issuer_pb.ICore|null} [coreInfo] AcademicCredential coreInfo
+         * @property {string|null} [signature] AcademicCredential signature
          * @property {issuer_pb.IStorageHash|null} [storageHash] AcademicCredential storageHash
          */
 
@@ -930,6 +761,14 @@ $root.issuer_pb = (function() {
          * @instance
          */
         AcademicCredential.prototype.coreInfo = null;
+
+        /**
+         * AcademicCredential signature.
+         * @member {string} signature
+         * @memberof issuer_pb.AcademicCredential
+         * @instance
+         */
+        AcademicCredential.prototype.signature = "";
 
         /**
          * AcademicCredential storageHash.
@@ -965,8 +804,10 @@ $root.issuer_pb = (function() {
                 writer = $Writer.create();
             if (message.coreInfo != null && message.hasOwnProperty("coreInfo"))
                 $root.issuer_pb.Core.encode(message.coreInfo, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+            if (message.signature != null && message.hasOwnProperty("signature"))
+                writer.uint32(/* id 2, wireType 2 =*/18).string(message.signature);
             if (message.storageHash != null && message.hasOwnProperty("storageHash"))
-                $root.issuer_pb.StorageHash.encode(message.storageHash, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                $root.issuer_pb.StorageHash.encode(message.storageHash, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             return writer;
         };
 
@@ -1005,6 +846,9 @@ $root.issuer_pb = (function() {
                     message.coreInfo = $root.issuer_pb.Core.decode(reader, reader.uint32());
                     break;
                 case 2:
+                    message.signature = reader.string();
+                    break;
+                case 3:
                     message.storageHash = $root.issuer_pb.StorageHash.decode(reader, reader.uint32());
                     break;
                 default:
@@ -1047,6 +891,9 @@ $root.issuer_pb = (function() {
                 if (error)
                     return "coreInfo." + error;
             }
+            if (message.signature != null && message.hasOwnProperty("signature"))
+                if (!$util.isString(message.signature))
+                    return "signature: string expected";
             if (message.storageHash != null && message.hasOwnProperty("storageHash")) {
                 var error = $root.issuer_pb.StorageHash.verify(message.storageHash);
                 if (error)
@@ -1072,6 +919,8 @@ $root.issuer_pb = (function() {
                     throw TypeError(".issuer_pb.AcademicCredential.coreInfo: object expected");
                 message.coreInfo = $root.issuer_pb.Core.fromObject(object.coreInfo);
             }
+            if (object.signature != null)
+                message.signature = String(object.signature);
             if (object.storageHash != null) {
                 if (typeof object.storageHash !== "object")
                     throw TypeError(".issuer_pb.AcademicCredential.storageHash: object expected");
@@ -1095,10 +944,13 @@ $root.issuer_pb = (function() {
             var object = {};
             if (options.defaults) {
                 object.coreInfo = null;
+                object.signature = "";
                 object.storageHash = null;
             }
             if (message.coreInfo != null && message.hasOwnProperty("coreInfo"))
                 object.coreInfo = $root.issuer_pb.Core.toObject(message.coreInfo, options);
+            if (message.signature != null && message.hasOwnProperty("signature"))
+                object.signature = message.signature;
             if (message.storageHash != null && message.hasOwnProperty("storageHash"))
                 object.storageHash = $root.issuer_pb.StorageHash.toObject(message.storageHash, options);
             return object;
@@ -1317,9 +1169,7 @@ $root.issuer_pb = (function() {
          * @property {string|null} [recipient] Core recipient
          * @property {string|null} [dateEarned] Core dateEarned
          * @property {string|null} [institutionId] Core institutionId
-         * @property {google.protobuf.ITimestamp|null} [expiration] Core expiration
-         * @property {string|null} [signature] Core signature
-         * @property {issuer_pb.IVerifyHelperData|null} [badgeforceData] Core badgeforceData
+         * @property {string|null} [expiration] Core expiration
          */
 
         /**
@@ -1387,27 +1237,11 @@ $root.issuer_pb = (function() {
 
         /**
          * Core expiration.
-         * @member {google.protobuf.ITimestamp|null|undefined} expiration
+         * @member {string} expiration
          * @memberof issuer_pb.Core
          * @instance
          */
-        Core.prototype.expiration = null;
-
-        /**
-         * Core signature.
-         * @member {string} signature
-         * @memberof issuer_pb.Core
-         * @instance
-         */
-        Core.prototype.signature = "";
-
-        /**
-         * Core badgeforceData.
-         * @member {issuer_pb.IVerifyHelperData|null|undefined} badgeforceData
-         * @memberof issuer_pb.Core
-         * @instance
-         */
-        Core.prototype.badgeforceData = null;
+        Core.prototype.expiration = "";
 
         /**
          * Creates a new Core instance using the specified properties.
@@ -1446,11 +1280,7 @@ $root.issuer_pb = (function() {
             if (message.institutionId != null && message.hasOwnProperty("institutionId"))
                 writer.uint32(/* id 6, wireType 2 =*/50).string(message.institutionId);
             if (message.expiration != null && message.hasOwnProperty("expiration"))
-                $root.google.protobuf.Timestamp.encode(message.expiration, writer.uint32(/* id 7, wireType 2 =*/58).fork()).ldelim();
-            if (message.signature != null && message.hasOwnProperty("signature"))
-                writer.uint32(/* id 8, wireType 2 =*/66).string(message.signature);
-            if (message.badgeforceData != null && message.hasOwnProperty("badgeforceData"))
-                $root.issuer_pb.VerifyHelperData.encode(message.badgeforceData, writer.uint32(/* id 9, wireType 2 =*/74).fork()).ldelim();
+                writer.uint32(/* id 7, wireType 2 =*/58).string(message.expiration);
             return writer;
         };
 
@@ -1504,13 +1334,7 @@ $root.issuer_pb = (function() {
                     message.institutionId = reader.string();
                     break;
                 case 7:
-                    message.expiration = $root.google.protobuf.Timestamp.decode(reader, reader.uint32());
-                    break;
-                case 8:
-                    message.signature = reader.string();
-                    break;
-                case 9:
-                    message.badgeforceData = $root.issuer_pb.VerifyHelperData.decode(reader, reader.uint32());
+                    message.expiration = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1565,19 +1389,9 @@ $root.issuer_pb = (function() {
             if (message.institutionId != null && message.hasOwnProperty("institutionId"))
                 if (!$util.isString(message.institutionId))
                     return "institutionId: string expected";
-            if (message.expiration != null && message.hasOwnProperty("expiration")) {
-                var error = $root.google.protobuf.Timestamp.verify(message.expiration);
-                if (error)
-                    return "expiration." + error;
-            }
-            if (message.signature != null && message.hasOwnProperty("signature"))
-                if (!$util.isString(message.signature))
-                    return "signature: string expected";
-            if (message.badgeforceData != null && message.hasOwnProperty("badgeforceData")) {
-                var error = $root.issuer_pb.VerifyHelperData.verify(message.badgeforceData);
-                if (error)
-                    return "badgeforceData." + error;
-            }
+            if (message.expiration != null && message.hasOwnProperty("expiration"))
+                if (!$util.isString(message.expiration))
+                    return "expiration: string expected";
             return null;
         };
 
@@ -1605,18 +1419,8 @@ $root.issuer_pb = (function() {
                 message.dateEarned = String(object.dateEarned);
             if (object.institutionId != null)
                 message.institutionId = String(object.institutionId);
-            if (object.expiration != null) {
-                if (typeof object.expiration !== "object")
-                    throw TypeError(".issuer_pb.Core.expiration: object expected");
-                message.expiration = $root.google.protobuf.Timestamp.fromObject(object.expiration);
-            }
-            if (object.signature != null)
-                message.signature = String(object.signature);
-            if (object.badgeforceData != null) {
-                if (typeof object.badgeforceData !== "object")
-                    throw TypeError(".issuer_pb.Core.badgeforceData: object expected");
-                message.badgeforceData = $root.issuer_pb.VerifyHelperData.fromObject(object.badgeforceData);
-            }
+            if (object.expiration != null)
+                message.expiration = String(object.expiration);
             return message;
         };
 
@@ -1640,9 +1444,7 @@ $root.issuer_pb = (function() {
                 object.recipient = "";
                 object.dateEarned = "";
                 object.institutionId = "";
-                object.expiration = null;
-                object.signature = "";
-                object.badgeforceData = null;
+                object.expiration = "";
             }
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
@@ -1657,11 +1459,7 @@ $root.issuer_pb = (function() {
             if (message.institutionId != null && message.hasOwnProperty("institutionId"))
                 object.institutionId = message.institutionId;
             if (message.expiration != null && message.hasOwnProperty("expiration"))
-                object.expiration = $root.google.protobuf.Timestamp.toObject(message.expiration, options);
-            if (message.signature != null && message.hasOwnProperty("signature"))
-                object.signature = message.signature;
-            if (message.badgeforceData != null && message.hasOwnProperty("badgeforceData"))
-                object.badgeforceData = $root.issuer_pb.VerifyHelperData.toObject(message.badgeforceData, options);
+                object.expiration = message.expiration;
             return object;
         };
 
@@ -1677,221 +1475,6 @@ $root.issuer_pb = (function() {
         };
 
         return Core;
-    })();
-
-    issuer_pb.VerifyHelperData = (function() {
-
-        /**
-         * Properties of a VerifyHelperData.
-         * @memberof issuer_pb
-         * @interface IVerifyHelperData
-         * @property {boolean|null} [revokationStatus] VerifyHelperData revokationStatus
-         * @property {issuer_pb.IProofOfIntegrity|null} [proofOfIntegrityHash] VerifyHelperData proofOfIntegrityHash
-         */
-
-        /**
-         * Constructs a new VerifyHelperData.
-         * @memberof issuer_pb
-         * @classdesc Represents a VerifyHelperData.
-         * @implements IVerifyHelperData
-         * @constructor
-         * @param {issuer_pb.IVerifyHelperData=} [properties] Properties to set
-         */
-        function VerifyHelperData(properties) {
-            if (properties)
-                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                    if (properties[keys[i]] != null)
-                        this[keys[i]] = properties[keys[i]];
-        }
-
-        /**
-         * VerifyHelperData revokationStatus.
-         * @member {boolean} revokationStatus
-         * @memberof issuer_pb.VerifyHelperData
-         * @instance
-         */
-        VerifyHelperData.prototype.revokationStatus = false;
-
-        /**
-         * VerifyHelperData proofOfIntegrityHash.
-         * @member {issuer_pb.IProofOfIntegrity|null|undefined} proofOfIntegrityHash
-         * @memberof issuer_pb.VerifyHelperData
-         * @instance
-         */
-        VerifyHelperData.prototype.proofOfIntegrityHash = null;
-
-        /**
-         * Creates a new VerifyHelperData instance using the specified properties.
-         * @function create
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {issuer_pb.IVerifyHelperData=} [properties] Properties to set
-         * @returns {issuer_pb.VerifyHelperData} VerifyHelperData instance
-         */
-        VerifyHelperData.create = function create(properties) {
-            return new VerifyHelperData(properties);
-        };
-
-        /**
-         * Encodes the specified VerifyHelperData message. Does not implicitly {@link issuer_pb.VerifyHelperData.verify|verify} messages.
-         * @function encode
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {issuer_pb.IVerifyHelperData} message VerifyHelperData message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        VerifyHelperData.encode = function encode(message, writer) {
-            if (!writer)
-                writer = $Writer.create();
-            if (message.revokationStatus != null && message.hasOwnProperty("revokationStatus"))
-                writer.uint32(/* id 1, wireType 0 =*/8).bool(message.revokationStatus);
-            if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash"))
-                $root.issuer_pb.ProofOfIntegrity.encode(message.proofOfIntegrityHash, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
-            return writer;
-        };
-
-        /**
-         * Encodes the specified VerifyHelperData message, length delimited. Does not implicitly {@link issuer_pb.VerifyHelperData.verify|verify} messages.
-         * @function encodeDelimited
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {issuer_pb.IVerifyHelperData} message VerifyHelperData message or plain object to encode
-         * @param {$protobuf.Writer} [writer] Writer to encode to
-         * @returns {$protobuf.Writer} Writer
-         */
-        VerifyHelperData.encodeDelimited = function encodeDelimited(message, writer) {
-            return this.encode(message, writer).ldelim();
-        };
-
-        /**
-         * Decodes a VerifyHelperData message from the specified reader or buffer.
-         * @function decode
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @param {number} [length] Message length if known beforehand
-         * @returns {issuer_pb.VerifyHelperData} VerifyHelperData
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        VerifyHelperData.decode = function decode(reader, length) {
-            if (!(reader instanceof $Reader))
-                reader = $Reader.create(reader);
-            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.issuer_pb.VerifyHelperData();
-            while (reader.pos < end) {
-                var tag = reader.uint32();
-                switch (tag >>> 3) {
-                case 1:
-                    message.revokationStatus = reader.bool();
-                    break;
-                case 2:
-                    message.proofOfIntegrityHash = $root.issuer_pb.ProofOfIntegrity.decode(reader, reader.uint32());
-                    break;
-                default:
-                    reader.skipType(tag & 7);
-                    break;
-                }
-            }
-            return message;
-        };
-
-        /**
-         * Decodes a VerifyHelperData message from the specified reader or buffer, length delimited.
-         * @function decodeDelimited
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-         * @returns {issuer_pb.VerifyHelperData} VerifyHelperData
-         * @throws {Error} If the payload is not a reader or valid buffer
-         * @throws {$protobuf.util.ProtocolError} If required fields are missing
-         */
-        VerifyHelperData.decodeDelimited = function decodeDelimited(reader) {
-            if (!(reader instanceof $Reader))
-                reader = new $Reader(reader);
-            return this.decode(reader, reader.uint32());
-        };
-
-        /**
-         * Verifies a VerifyHelperData message.
-         * @function verify
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {Object.<string,*>} message Plain object to verify
-         * @returns {string|null} `null` if valid, otherwise the reason why it is not
-         */
-        VerifyHelperData.verify = function verify(message) {
-            if (typeof message !== "object" || message === null)
-                return "object expected";
-            if (message.revokationStatus != null && message.hasOwnProperty("revokationStatus"))
-                if (typeof message.revokationStatus !== "boolean")
-                    return "revokationStatus: boolean expected";
-            if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash")) {
-                var error = $root.issuer_pb.ProofOfIntegrity.verify(message.proofOfIntegrityHash);
-                if (error)
-                    return "proofOfIntegrityHash." + error;
-            }
-            return null;
-        };
-
-        /**
-         * Creates a VerifyHelperData message from a plain object. Also converts values to their respective internal types.
-         * @function fromObject
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {Object.<string,*>} object Plain object
-         * @returns {issuer_pb.VerifyHelperData} VerifyHelperData
-         */
-        VerifyHelperData.fromObject = function fromObject(object) {
-            if (object instanceof $root.issuer_pb.VerifyHelperData)
-                return object;
-            var message = new $root.issuer_pb.VerifyHelperData();
-            if (object.revokationStatus != null)
-                message.revokationStatus = Boolean(object.revokationStatus);
-            if (object.proofOfIntegrityHash != null) {
-                if (typeof object.proofOfIntegrityHash !== "object")
-                    throw TypeError(".issuer_pb.VerifyHelperData.proofOfIntegrityHash: object expected");
-                message.proofOfIntegrityHash = $root.issuer_pb.ProofOfIntegrity.fromObject(object.proofOfIntegrityHash);
-            }
-            return message;
-        };
-
-        /**
-         * Creates a plain object from a VerifyHelperData message. Also converts values to other types if specified.
-         * @function toObject
-         * @memberof issuer_pb.VerifyHelperData
-         * @static
-         * @param {issuer_pb.VerifyHelperData} message VerifyHelperData
-         * @param {$protobuf.IConversionOptions} [options] Conversion options
-         * @returns {Object.<string,*>} Plain object
-         */
-        VerifyHelperData.toObject = function toObject(message, options) {
-            if (!options)
-                options = {};
-            var object = {};
-            if (options.defaults) {
-                object.revokationStatus = false;
-                object.proofOfIntegrityHash = null;
-            }
-            if (message.revokationStatus != null && message.hasOwnProperty("revokationStatus"))
-                object.revokationStatus = message.revokationStatus;
-            if (message.proofOfIntegrityHash != null && message.hasOwnProperty("proofOfIntegrityHash"))
-                object.proofOfIntegrityHash = $root.issuer_pb.ProofOfIntegrity.toObject(message.proofOfIntegrityHash, options);
-            return object;
-        };
-
-        /**
-         * Converts this VerifyHelperData to JSON.
-         * @function toJSON
-         * @memberof issuer_pb.VerifyHelperData
-         * @instance
-         * @returns {Object.<string,*>} JSON object
-         */
-        VerifyHelperData.prototype.toJSON = function toJSON() {
-            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-        };
-
-        return VerifyHelperData;
     })();
 
     return issuer_pb;
@@ -2126,230 +1709,6 @@ $root.google = (function() {
             };
 
             return Any;
-        })();
-
-        protobuf.Timestamp = (function() {
-
-            /**
-             * Properties of a Timestamp.
-             * @memberof google.protobuf
-             * @interface ITimestamp
-             * @property {number|Long|null} [seconds] Timestamp seconds
-             * @property {number|null} [nanos] Timestamp nanos
-             */
-
-            /**
-             * Constructs a new Timestamp.
-             * @memberof google.protobuf
-             * @classdesc Represents a Timestamp.
-             * @implements ITimestamp
-             * @constructor
-             * @param {google.protobuf.ITimestamp=} [properties] Properties to set
-             */
-            function Timestamp(properties) {
-                if (properties)
-                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
-                        if (properties[keys[i]] != null)
-                            this[keys[i]] = properties[keys[i]];
-            }
-
-            /**
-             * Timestamp seconds.
-             * @member {number|Long} seconds
-             * @memberof google.protobuf.Timestamp
-             * @instance
-             */
-            Timestamp.prototype.seconds = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
-
-            /**
-             * Timestamp nanos.
-             * @member {number} nanos
-             * @memberof google.protobuf.Timestamp
-             * @instance
-             */
-            Timestamp.prototype.nanos = 0;
-
-            /**
-             * Creates a new Timestamp instance using the specified properties.
-             * @function create
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {google.protobuf.ITimestamp=} [properties] Properties to set
-             * @returns {google.protobuf.Timestamp} Timestamp instance
-             */
-            Timestamp.create = function create(properties) {
-                return new Timestamp(properties);
-            };
-
-            /**
-             * Encodes the specified Timestamp message. Does not implicitly {@link google.protobuf.Timestamp.verify|verify} messages.
-             * @function encode
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {google.protobuf.ITimestamp} message Timestamp message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Timestamp.encode = function encode(message, writer) {
-                if (!writer)
-                    writer = $Writer.create();
-                if (message.seconds != null && message.hasOwnProperty("seconds"))
-                    writer.uint32(/* id 1, wireType 0 =*/8).int64(message.seconds);
-                if (message.nanos != null && message.hasOwnProperty("nanos"))
-                    writer.uint32(/* id 2, wireType 0 =*/16).int32(message.nanos);
-                return writer;
-            };
-
-            /**
-             * Encodes the specified Timestamp message, length delimited. Does not implicitly {@link google.protobuf.Timestamp.verify|verify} messages.
-             * @function encodeDelimited
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {google.protobuf.ITimestamp} message Timestamp message or plain object to encode
-             * @param {$protobuf.Writer} [writer] Writer to encode to
-             * @returns {$protobuf.Writer} Writer
-             */
-            Timestamp.encodeDelimited = function encodeDelimited(message, writer) {
-                return this.encode(message, writer).ldelim();
-            };
-
-            /**
-             * Decodes a Timestamp message from the specified reader or buffer.
-             * @function decode
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @param {number} [length] Message length if known beforehand
-             * @returns {google.protobuf.Timestamp} Timestamp
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Timestamp.decode = function decode(reader, length) {
-                if (!(reader instanceof $Reader))
-                    reader = $Reader.create(reader);
-                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.google.protobuf.Timestamp();
-                while (reader.pos < end) {
-                    var tag = reader.uint32();
-                    switch (tag >>> 3) {
-                    case 1:
-                        message.seconds = reader.int64();
-                        break;
-                    case 2:
-                        message.nanos = reader.int32();
-                        break;
-                    default:
-                        reader.skipType(tag & 7);
-                        break;
-                    }
-                }
-                return message;
-            };
-
-            /**
-             * Decodes a Timestamp message from the specified reader or buffer, length delimited.
-             * @function decodeDelimited
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
-             * @returns {google.protobuf.Timestamp} Timestamp
-             * @throws {Error} If the payload is not a reader or valid buffer
-             * @throws {$protobuf.util.ProtocolError} If required fields are missing
-             */
-            Timestamp.decodeDelimited = function decodeDelimited(reader) {
-                if (!(reader instanceof $Reader))
-                    reader = new $Reader(reader);
-                return this.decode(reader, reader.uint32());
-            };
-
-            /**
-             * Verifies a Timestamp message.
-             * @function verify
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {Object.<string,*>} message Plain object to verify
-             * @returns {string|null} `null` if valid, otherwise the reason why it is not
-             */
-            Timestamp.verify = function verify(message) {
-                if (typeof message !== "object" || message === null)
-                    return "object expected";
-                if (message.seconds != null && message.hasOwnProperty("seconds"))
-                    if (!$util.isInteger(message.seconds) && !(message.seconds && $util.isInteger(message.seconds.low) && $util.isInteger(message.seconds.high)))
-                        return "seconds: integer|Long expected";
-                if (message.nanos != null && message.hasOwnProperty("nanos"))
-                    if (!$util.isInteger(message.nanos))
-                        return "nanos: integer expected";
-                return null;
-            };
-
-            /**
-             * Creates a Timestamp message from a plain object. Also converts values to their respective internal types.
-             * @function fromObject
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {Object.<string,*>} object Plain object
-             * @returns {google.protobuf.Timestamp} Timestamp
-             */
-            Timestamp.fromObject = function fromObject(object) {
-                if (object instanceof $root.google.protobuf.Timestamp)
-                    return object;
-                var message = new $root.google.protobuf.Timestamp();
-                if (object.seconds != null)
-                    if ($util.Long)
-                        (message.seconds = $util.Long.fromValue(object.seconds)).unsigned = false;
-                    else if (typeof object.seconds === "string")
-                        message.seconds = parseInt(object.seconds, 10);
-                    else if (typeof object.seconds === "number")
-                        message.seconds = object.seconds;
-                    else if (typeof object.seconds === "object")
-                        message.seconds = new $util.LongBits(object.seconds.low >>> 0, object.seconds.high >>> 0).toNumber();
-                if (object.nanos != null)
-                    message.nanos = object.nanos | 0;
-                return message;
-            };
-
-            /**
-             * Creates a plain object from a Timestamp message. Also converts values to other types if specified.
-             * @function toObject
-             * @memberof google.protobuf.Timestamp
-             * @static
-             * @param {google.protobuf.Timestamp} message Timestamp
-             * @param {$protobuf.IConversionOptions} [options] Conversion options
-             * @returns {Object.<string,*>} Plain object
-             */
-            Timestamp.toObject = function toObject(message, options) {
-                if (!options)
-                    options = {};
-                var object = {};
-                if (options.defaults) {
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, false);
-                        object.seconds = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.seconds = options.longs === String ? "0" : 0;
-                    object.nanos = 0;
-                }
-                if (message.seconds != null && message.hasOwnProperty("seconds"))
-                    if (typeof message.seconds === "number")
-                        object.seconds = options.longs === String ? String(message.seconds) : message.seconds;
-                    else
-                        object.seconds = options.longs === String ? $util.Long.prototype.toString.call(message.seconds) : options.longs === Number ? new $util.LongBits(message.seconds.low >>> 0, message.seconds.high >>> 0).toNumber() : message.seconds;
-                if (message.nanos != null && message.hasOwnProperty("nanos"))
-                    object.nanos = message.nanos;
-                return object;
-            };
-
-            /**
-             * Converts this Timestamp to JSON.
-             * @function toJSON
-             * @memberof google.protobuf.Timestamp
-             * @instance
-             * @returns {Object.<string,*>} JSON object
-             */
-            Timestamp.prototype.toJSON = function toJSON() {
-                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
-            };
-
-            return Timestamp;
         })();
 
         return protobuf;

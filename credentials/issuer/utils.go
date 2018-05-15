@@ -2,17 +2,27 @@ package issuer
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	issuer_pb "github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb"
+	"github.com/gogo/protobuf/proto"
 )
 
 // ComputeIntegrityHash ...
 func ComputeIntegrityHash(credential *issuer_pb.Core) (string, error) {
-	strToHash := fmt.Sprintf("%v%v%v%v%v%v%v%v", credential.GetDateEarned(), credential.GetExpiration().GetSeconds(),
-		credential.GetInstitutionId(), credential.GetIssuer(),
-		credential.GetName(), credential.GetRecipient(),
-		credential.GetSchool(), credential.GetSignature())
+	b, _ := proto.Marshal(credential)
+	return common.Hexdigest(string(b)), nil
+}
 
-	return common.Hexdigest(strToHash), nil
+// VerifyDates checks date format RFC3339
+func VerifyDates(dates ...string) error {
+	for _, date := range dates {
+		_, err := strconv.ParseInt(date, 10, 64)
+		if err != nil {
+			return fmt.Errorf("Datetime format invalid: %v", err)
+		}
+	}
+
+	return nil
 }

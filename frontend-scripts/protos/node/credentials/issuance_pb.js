@@ -11,7 +11,6 @@ var jspb = require('google-protobuf');
 var goog = jspb;
 var global = Function('return this')();
 
-var common_pb = require('./common_pb.js');
 goog.exportSymbol('proto.issuer_pb.Issuance', null, global);
 
 /**
@@ -63,7 +62,8 @@ proto.issuer_pb.Issuance.toObject = function(includeInstance, msg) {
     signature: jspb.Message.getFieldWithDefault(msg, 1, ""),
     issuerPublicKey: jspb.Message.getFieldWithDefault(msg, 2, ""),
     recipientPublicKey: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    proofOfIntegrityHash: (f = msg.getProofOfIntegrityHash()) && common_pb.ProofOfIntegrity.toObject(includeInstance, f)
+    revokationStatus: jspb.Message.getFieldWithDefault(msg, 4, false),
+    proofOfIntegrityHash: jspb.Message.getFieldWithDefault(msg, 5, "")
   };
 
   if (includeInstance) {
@@ -112,9 +112,12 @@ proto.issuer_pb.Issuance.deserializeBinaryFromReader = function(msg, reader) {
       var value = /** @type {string} */ (reader.readString());
       msg.setRecipientPublicKey(value);
       break;
-    case 7:
-      var value = new common_pb.ProofOfIntegrity;
-      reader.readMessage(value,common_pb.ProofOfIntegrity.deserializeBinaryFromReader);
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setRevokationStatus(value);
+      break;
+    case 5:
+      var value = /** @type {string} */ (reader.readString());
       msg.setProofOfIntegrityHash(value);
       break;
     default:
@@ -167,12 +170,18 @@ proto.issuer_pb.Issuance.serializeBinaryToWriter = function(message, writer) {
       f
     );
   }
+  f = message.getRevokationStatus();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
+    );
+  }
   f = message.getProofOfIntegrityHash();
-  if (f != null) {
-    writer.writeMessage(
-      7,
-      f,
-      common_pb.ProofOfIntegrity.serializeBinaryToWriter
+  if (f.length > 0) {
+    writer.writeString(
+      5,
+      f
     );
   }
 };
@@ -224,32 +233,34 @@ proto.issuer_pb.Issuance.prototype.setRecipientPublicKey = function(value) {
 
 
 /**
- * optional ProofOfIntegrity proof_of_integrity_hash = 7;
- * @return {?proto.issuer_pb.ProofOfIntegrity}
+ * optional bool revokation_status = 4;
+ * Note that Boolean fields may be set to 0/1 when serialized from a Java server.
+ * You should avoid comparisons like {@code val === true/false} in those cases.
+ * @return {boolean}
  */
-proto.issuer_pb.Issuance.prototype.getProofOfIntegrityHash = function() {
-  return /** @type{?proto.issuer_pb.ProofOfIntegrity} */ (
-    jspb.Message.getWrapperField(this, common_pb.ProofOfIntegrity, 7));
+proto.issuer_pb.Issuance.prototype.getRevokationStatus = function() {
+  return /** @type {boolean} */ (jspb.Message.getFieldWithDefault(this, 4, false));
 };
 
 
-/** @param {?proto.issuer_pb.ProofOfIntegrity|undefined} value */
-proto.issuer_pb.Issuance.prototype.setProofOfIntegrityHash = function(value) {
-  jspb.Message.setWrapperField(this, 7, value);
-};
-
-
-proto.issuer_pb.Issuance.prototype.clearProofOfIntegrityHash = function() {
-  this.setProofOfIntegrityHash(undefined);
+/** @param {boolean} value */
+proto.issuer_pb.Issuance.prototype.setRevokationStatus = function(value) {
+  jspb.Message.setProto3BooleanField(this, 4, value);
 };
 
 
 /**
- * Returns whether this field is set.
- * @return {!boolean}
+ * optional string proof_of_integrity_hash = 5;
+ * @return {string}
  */
-proto.issuer_pb.Issuance.prototype.hasProofOfIntegrityHash = function() {
-  return jspb.Message.getField(this, 7) != null;
+proto.issuer_pb.Issuance.prototype.getProofOfIntegrityHash = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 5, ""));
+};
+
+
+/** @param {string} value */
+proto.issuer_pb.Issuance.prototype.setProofOfIntegrityHash = function(value) {
+  jspb.Message.setProto3StringField(this, 5, value);
 };
 
 

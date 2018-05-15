@@ -38,12 +38,12 @@ type BFAC struct {
 }
 
 // AddBACFile ...
-func (ipfs *IPFSClient) AddBACFile(credential issuer_pb.Core) (string, error) {
+func (ipfs *IPFSClient) AddBACFile(credential issuer_pb.AcademicCredential) (string, error) {
 	protoB, _ := proto.Marshal(&credential)
 	bfac := BFAC{Data: base64.RawStdEncoding.EncodeToString(protoB)}
 	b, _ := json.Marshal(bfac)
 
-	req, err := ipfs.NewIPFSAddReq(fmt.Sprintf("%v.bac", credential.GetSignature()), b, credential.GetRecipient())
+	req, err := ipfs.NewIPFSAddReq(fmt.Sprintf("%v.bac", credential.GetSignature()), b, credential.GetCoreInfo().GetRecipient())
 	if err != nil {
 		return "", err
 	}

@@ -46,7 +46,7 @@ func (s *AcademicState) GetStorageHash(publicKey, degreeName, institutionID stri
 }
 
 // SaveCredential ...
-func (s *AcademicState) SaveCredential(credential issuer_pb.Core) error {
+func (s *AcademicState) SaveCredential(credential issuer_pb.AcademicCredential) error {
 	ipfsClient := common.NewIPFSHTTPClient(IPFSCONN)
 	hash, err := ipfsClient.AddBACFile(credential)
 	if err != nil {
@@ -54,7 +54,7 @@ func (s *AcademicState) SaveCredential(credential issuer_pb.Core) error {
 	}
 
 	storageHash := issuer_pb.StorageHash{Hash: hash}
-	err = s.SaveStorageHash(credential, storageHash)
+	err = s.SaveStorageHash(credential.GetCoreInfo(), storageHash)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not storage hash %v", err.Error())}
 	}
@@ -63,7 +63,7 @@ func (s *AcademicState) SaveCredential(credential issuer_pb.Core) error {
 }
 
 // SaveStorageHash ...
-func (s *AcademicState) SaveStorageHash(credential issuer_pb.Core, storageHash issuer_pb.StorageHash) error {
+func (s *AcademicState) SaveStorageHash(credential *issuer_pb.Core, storageHash issuer_pb.StorageHash) error {
 	//validate this data
 	address := common.MakeAddress(Namespace, fmt.Sprintf("%v%v%v", credential.GetRecipient(), credential.GetName(), credential.GetInstitutionId()))
 	b, err := proto.Marshal(&storageHash)

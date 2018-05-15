@@ -26,41 +26,38 @@ var (
 
 // IssueCredentialHandler ...
 func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, data interface{}) error {
-	var coreData issuer_pb.Core
+	var credential issuer_pb.AcademicCredential
 	payload := data.(*issuer_pb.Payload)
-	err := ptypes.UnmarshalAny(payload.Data.Data, &coreData)
+	err := ptypes.UnmarshalAny(payload.Data.Data, &credential)
 	if err != nil {
 		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
 	}
 
-	poiHash, err := ComputeIntegrityHash(&coreData)
+	if err := VerifyDates([]string{credential.GetCoreInfo().GetDateEarned(), credential.GetCoreInfo().GetExpiration()}...); err != nil {
+		logger.Error(err)
+		return &processor.InvalidTransactionError{Msg: err.Error()}
+	}
+
+	poiHash, err := ComputeIntegrityHash(credential.GetCoreInfo())
 	if err != nil {
 		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Could compute integrity hash"}
 	}
 
-	coreData.BadgeforceData = &issuer_pb.VerifyHelperData{
-		ProofOfIntegrityHash: &issuer_pb.ProofOfIntegrity{Hash: poiHash},
-		RevokationStatus:     false,
-	}
-
 	newIssuance := &issuer_pb.Issuance{
-		Signature:            coreData.GetSignature(),
+		Signature:            credential.GetSignature(),
 		IssuerPublicKey:      request.GetHeader().GetSignerPublicKey(),
-		RecipientPublicKey:   coreData.GetRecipient(),
-		ProofOfIntegrityHash: coreData.GetBadgeforceData().GetProofOfIntegrityHash(),
+		RecipientPublicKey:   credential.GetCoreInfo().GetRecipient(),
+		ProofOfIntegrityHash: poiHash,
 	}
 
-	issuanceState := issuance.NewIssuanceState(context)
-	err = issuanceState.SaveIssuance(newIssuance)
+	err = issuance.NewIssuanceState(context).SaveIssuance(newIssuance)
 	if err != nil {
 		return &processor.InternalError{Msg: "Could not save issuance"}
 	}
 
-	credentialState := academic.NewAcademicState(context)
-	logger.Debug(coreData.String())
-	err = credentialState.SaveCredential(coreData)
+	err = academic.NewAcademicState(context).SaveCredential(credential)
 	if err != nil {
 		return &processor.InternalError{Msg: fmt.Sprintf("Could not save SaveCredential %v", err.Error())}
 	}

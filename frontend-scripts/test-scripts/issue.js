@@ -1,10 +1,10 @@
 const namespaces = require('../namespace_prefixes');
-
 const {createContext, CryptoFactory} = require('sawtooth-sdk/signing');
 const {Secp256k1PrivateKey} = require('sawtooth-sdk/signing/secp256k1');
 const {createHash} = require('crypto');
 const protobuf = require('sawtooth-sdk/protobuf');
 const BigNumber = require('bignumber.js');
+const moment = require('moment');
 const request = require('request');
 const context = createContext('secp256k1');
 const proto = require('google-protobuf');
@@ -16,13 +16,11 @@ const degree = require('../protos/node/credentials/degree_pb');
 const FAMILY_NAME = 'badgeforce_issuer';
 const FAMILY_VERSION = '1.0';
 const REST_API = 'http://127.0.0.1:8008/batches';
-
 const pk = Buffer.from("e3ddee618d8a8864481e71021e42ed46c3ab410ab1ad7cdf0ff31f6d61739275", 'hex')
 const priv = new Secp256k1PrivateKey(pk)
 const signer = new CryptoFactory(context).newSigner(priv)
 
 const recipient = new CryptoFactory(context).newSigner(context.newRandomPrivateKey());
-
 const newSingleBatch = (inputs, outputs, signer, dependencies, payload) => {
     const transactionHeaderBytes = protobuf.TransactionHeader.encode({
         familyName: FAMILY_NAME,
@@ -87,22 +85,23 @@ const issue = () => {
     core.setSchool("SchoolUniversityEDU");
     core.setIssuer(signer.getPublicKey().asHex());
     core.setRecipient(recipient.getPublicKey().asHex());
-    core.setDateEarned(Date.now().toString());
+    core.setDateEarned(moment().unix().toString());
     core.setInstitutionid("SUEDU1234");
-    const expiration = new timestamp.Timestamp();
-    expiration.setSeconds(0);
-    core.setExpiration(expiration);
-    core.setSignature(signer.sign(core.serializeBinary()));
+    core.setExpiration(moment(new Date(8640000000000000)).unix().toString());
+
+    const academicCred = new degree.AcademicCredential()
+    academicCred.setCoreInfo(core);
+    academicCred.setSignature(signer.sign(core.serializeBinary()));
 
     // we are going to wrap this data in google.protobuf.any, to allow for arbitrary data passing in our 1 transaction handler many subhandler scheme 
-    const coreAny = new any.Any()
-    coreAny.setValue(core.serializeBinary());
-    coreAny.setTypeUrl('github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb.Core');
+    const academicCredAny = new any.Any()
+    academicCredAny.setValue(academicCred.serializeBinary());
+    academicCredAny.setTypeUrl('github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb.AcademicCredential');
 
-    const payload = getPayload(coreAny, payloads.PayloadAction.ISSUE);
+    const payload = getPayload(academicCredAny, payloads.PayloadAction.ISSUE);
 
     const namespaceAddresses = [
-        namespaces.makeAddress(namespaces.ISSUANCE, core.getSignature().concat(signer.getPublicKey().asHex())),
+        namespaces.makeAddress(namespaces.ISSUANCE, academicCred.getSignature().concat(signer.getPublicKey().asHex())),
         namespaces.makeAddress(namespaces.ACADEMIC, recipient.getPublicKey().asHex().concat(core.getName()).concat(core.getInstitutionid()))
     ];
 
