@@ -1,6 +1,4 @@
 
-import { observable } from 'mobx';
-
 export class MetaData {
     constructor(action, description, date, meta){
         this.action = action; 
@@ -12,8 +10,6 @@ export class MetaData {
 
 
 export class Batch {
-    @observable status;
-
     constructor(link, metaData) {
         this.link = link; 
         this.metaData = metaData;
@@ -23,8 +19,6 @@ export class Batch {
 }
 
 export class Watcher {
-    @observable transaction;
-
     constructor(transaction, callback) {
         this.transaction = transaction;
         this.callback = callback;
@@ -69,7 +63,7 @@ export class BatchStatusWatcher {
     subscribe(batch, cb) {
         const watcher = new Watcher(batch, cb);
         watcher.watch();
-        this.store(watcher);
+        this.store(watcher.id, watcher.transaction);
     }
 
     unsubscribe(watcherLink) {

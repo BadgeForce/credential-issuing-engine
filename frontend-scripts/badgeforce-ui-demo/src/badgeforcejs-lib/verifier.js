@@ -10,7 +10,7 @@ const REST_API_CHAIN = process.env.NODE_ENV === 'development' ? "http://localhos
 const REST_API_IPFS = process.env.NODE_ENV === 'development' ? "http://localhost:3010/ipfs" : 'http://127.0.0.1:8080/ipfs';
 
 export class Results {
-    constructor() {
+    constructor(statusCB) {
         this.default = {message: 'Pending', success: false}
         this.checks = {0: 'Proof of Itegrity', 1: 'Recipient', 2: 'Issuer', 3: 'Signature Match', 4: 'Expiration', 5: 'Revokation', 6: 'Signature is Valid'}
         this.results = {}
@@ -18,12 +18,15 @@ export class Results {
         Object.values(this.checks).forEach(val => {
             this.results[val] = this.default;
         });
+
+        this.statusCB = statusCB;
     }
 
-    update(index, data) {
+    async update(index, data) {
         if(!data.success)
             this.verified = false;
         this.results[this.checks[index]] = data;
+        await this.statusCB(data);
     }
 }
 export class Verifier {
@@ -71,70 +74,40 @@ export class Verifier {
     computeIntegrityHash(coreInfo) {
         return createHash('sha512').update(Core.encode(coreInfo).finish()).digest('hex').toLowerCase();
     }
-
-    newStep(title, description) {
-        return { title, description, disabled: false, completed: false, active: false }
-    }
-    
-    newSteps() {
-        return {
-            0: this.newStep('Proof Of Integrity', 'Checking if data was tampered with using Proof Of Integrity Hash'),
-            1: this.newStep('Recipient', 'Making sure Recipient value is valid'),
-            2: this.newStep('Issuer', 'Making sure Issuer value is valid'),
-            3: this.newStep('Signature tampering', 'Making sure Signatures match'),
-            4: this.newStep('Expiration', 'Checking if credential is expired'),
-            5: this.newStep('Revokation', 'Checking if credential is revoked'),
-            6: this.newStep('Signature Encryption', 'Verifying Signature with Issuer Public Key')
-        }
-    }
+ 
     async performChecks(degree, issuance) {
-        const results = new Results();
+        const results = new Results(this.statusCB);
 
         const computedPOI = this.computeIntegrityHash(degree.coreInfo);
         
-        await this.statusCB(0, false, false);
         if(computedPOI !== issuance.proofOfIntegrityHash) 
-            await this.statusCB(0, true);
-            results.update(0, {message: this.errMsgs.proofOfIntegrityHash(computedPOI, issuance.proofOfIntegrityHash.hash), success: false});
-        results.update(0, {message: 'Proof of integrity hash, data not tempered with', success: true});
+                results.update(0, {message: this.errMsgs.proofOfIntegrityHash(computedPOI, issuance.proofOfIntegrityHash.hash), success: false});
+        await results.update(0, {message: 'Proof of integrity hash, data not tempered with', success: true});
         
-        await this.statusCB(1, false, true);
         if(degree.coreInfo.recipient !== issuance.recipientPublicKey)
-            await this.statusCB(1, true);
-            results.update(1, {message: this.errMsgs.recipientMisMatch(degree.coreInfo.recipient, issuance.recipient), success: false});
-        results.update(1, {message: 'Recipient not tempered with', success: true});
+                await results.update(1, {message: this.errMsgs.recipientMisMatch(degree.coreInfo.recipient, issuance.recipient), success: false});
+        await results.update(1, {message: 'Recipient not tempered with', success: true});
 
-        await this.statusCB(2, false, true);
         if(degree.coreInfo.issuer !== issuance.issuerPublicKey) 
-            await this.statusCB(2, true);
-            results.update(2, {message: this.errMsgs.issuerMisMatch(degree.coreInfo.issuer, issuance.issuer), success: false});
-        results.update(2, {message: 'Issuer not tempered with', success: true});
+                await results.update(2, {message: this.errMsgs.issuerMisMatch(degree.coreInfo.issuer, issuance.issuer), success: false});
+        await results.update(2, {message: 'Issuer not tempered with', success: true});
 
-        await this.statusCB(3, false, true);
         if(degree.signature !== issuance.signature) 
-            await this.statusCB(4, true);
-            results.update(3, {message: this.errMsgs.signatureMisMatch(degree.coreInfo.signature, issuance.signature), success: false});
-        results.update(3, {message: 'Signature not tempered with', success: true});
+                await results.update(3, {message: this.errMsgs.signatureMisMatch(degree.coreInfo.signature, issuance.signature), success: false});
+        await results.update(3, {message: 'Signature not tempered with', success: true});
 
-        await this.statusCB(4, false, true);
         if(moment().isAfter(moment(degree.coreInfo.expiration))) 
-            await this.statusCB(4, true);
-            results.update(4, {message: this.errMsgs.expired(new Date().setSeconds(degree.coreInfo.expiration.seconds).toString()), success: false});
-        results.update(4, {message: 'Credential not expired', success: true});
+                await results.update(4, {message: this.errMsgs.expired(new Date().setSeconds(degree.coreInfo.expiration.seconds).toString()), success: false});
+        await results.update(4, {message: 'Credential not expired', success: true});
 
-        await this.statusCB(5, false, true);
         if(issuance.revokationStatus) 
-            await this.statusCB(5, true);
-            results.update(5, {message: this.errMsgs.revoked(), success: false});
-        results.update(5, {message: 'Credential not revoked', success: true});
+                await results.update(5, {message: this.errMsgs.revoked(), success: false});
+        await results.update(5, {message: 'Credential not revoked', success: true});
 
-        await this.statusCB(6, false, true);
         if (!this.verifySignature(degree))
-            await this.statusCB(6, true);
-            results.update(6, {message: this.errMsgs.invalidSignature(degree.signature), success: false}); 
-        results.update(6, {message: 'Signature is valid', success: true});
+                await results.update(6, {message: this.errMsgs.invalidSignature(degree.signature), success: false}); 
+        await results.update(6, {message: 'Signature is valid', success: true});
         
-        await this.statusCB(6, false, true);
         return {
             results: results.results,
             degree,

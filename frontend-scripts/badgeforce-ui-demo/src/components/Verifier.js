@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Step, Loader, Icon, List, Header, Card, Image, Form, Dimmer, Grid, Transition } from 'semantic-ui-react'
-import  verifierjs from '../verifierjs'; 
+import  bjs from '../badgeforcejs-lib'; 
 
 const moment = require('moment');
 
@@ -69,11 +69,6 @@ export class VerifyResults extends Component {
     }
 }
 
-// export class VerifySteps extends Component {
-
-// }
-
-
 export class Verifier extends Component {
     constructor(props) {
         super(props);
@@ -86,7 +81,7 @@ export class Verifier extends Component {
             loading: {toggle: false, message: ''},
             verifying: {
                 toggle: false, 
-                steps: {}
+                message: ''
             },
             visible: false
         }
@@ -94,8 +89,8 @@ export class Verifier extends Component {
         
         this.handleVerify = this.handleVerify.bind(this);
         this.uploadJSON = this.uploadJSON.bind(this);
-        this.handleSteps = this.handleSteps.bind(this);
-        this.badgeforceVerifier = new verifierjs.BadgeforceVerifier('', this.handleSteps);
+        this.handleStatusUpdate = this.handleStatusUpdate.bind(this);
+        this.badgeforceVerifier = new bjs.BadgeforceVerifier('', this.handleStatusUpdate);
     }
 
     async sleep(duration) {
@@ -105,26 +100,12 @@ export class Verifier extends Component {
             }, duration*1000)
 		});
     }
-    async handleSteps(active, failed, move) {
-        console.log(this.state.verifying.steps);
+    async handleStatusUpdate(data) {
         try {
             await this.sleep(1);
-            const {steps} = this.state.verifying;
-            if(failed) {
-                steps[active].disabled = true;
-                steps[active].completed = false;
-            }
-            
-            if(move) {
-                steps[active-1].active = false;
-                steps[active-1].completed = true;
-            } 
-            
-            steps[active].active = true;
-
             this.setState(prevState => ({
                 verifying: {
-                    ...prevState.verifying, steps: steps
+                    ...prevState.verifying, message: data.message
                 }
             }));
         } catch (error) {
@@ -160,7 +141,7 @@ export class Verifier extends Component {
         }
     }
     async handleVerify() {
-        this.setState({verifying: {toggle: true, steps: this.badgeforceVerifier.newSteps()}, results: null, visible: false});
+        this.setState({verifying: {toggle: true, message: 'Verifying'}, results: null, visible: false});
         try {
             const results = await this.badgeforceVerifier.verifyAcademic(this.state.recipient, this.state.credentialName, this.state.institutionId);
             this.setState({
@@ -169,7 +150,7 @@ export class Verifier extends Component {
                 credentialName: '', 
                 institutionId: '',
                 error: null,
-                verifying: {toggle: false, steps: {}},
+                verifying: {toggle: false, message: ''},
                 visible: true
             });
         } catch (error) {
@@ -179,7 +160,7 @@ export class Verifier extends Component {
                 credentialName: '', 
                 institutionId: '',
                 results: null,
-                verifying: {toggle: false, steps: {}},
+                verifying: {toggle: false, message: ''},
                 error
             });
         }
@@ -191,20 +172,7 @@ export class Verifier extends Component {
                     <Loader indeterminate>{this.state.loading.message}</Loader>
                 </Dimmer>
                 <Dimmer inverted active={this.state.verifying.toggle}>
-                    {Object.values(this.state.verifying.steps).length > 0 ? 
-                        <Step.Group size='mini'>
-                            {Object.values(this.state.verifying.steps).map((step, i) => {
-                                return (
-                                    <Step key={i} disabled={step.disabled} completed={step.completed} active={step.active}>
-                                        <Icon name='info' />
-                                        <Step.Content>
-                                            <Step.Title>{step.title}</Step.Title>
-                                            <Step.Description>{step.description}</Step.Description>
-                                        </Step.Content>
-                                    </Step>
-                                );
-                            })}
-                        </Step.Group> : <Loader indeterminate />}
+                    <Loader indeterminate>{this.state.verifying.message}</Loader>
                 </Dimmer>
                 <Grid.Column  mobile={4} tablet={12}>
                     <Header

@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
 import './App.css';
-import { Verifier } from './components/Verifier';
+import { Home } from './components/Home';
 
 class App extends Component {
   render() {
     return (
       <div className="App">
-        <Verifier />
+        <Home />
       </div>
     );
   }
 }
 
 export default App;
+ 
