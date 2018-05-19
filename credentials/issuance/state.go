@@ -26,9 +26,9 @@ func NewIssuanceState(context *processor.Context) *IssuanceState {
 }
 
 // GetIssuance ...
-func (s *IssuanceState) GetIssuance(signature string) (*issuer_pb.Issuance, error) {
+func (s *IssuanceState) GetIssuance(signature, issuer string) (*issuer_pb.Issuance, error) {
 	var issuance issuer_pb.Issuance
-	address := common.MakeAddress(Namespace, signature)
+	address := common.MakeAddress(Namespace, signature+issuer)
 	IssuanceState, err := s.Context.GetState([]string{address})
 	if err != nil {
 		return nil, &processor.InternalError{Msg: "Could not GetIssuanceState"}
@@ -56,6 +56,24 @@ func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) error {
 	if err != nil {
 		logger.Errorf("ERROR", err, address)
 		return &processor.InternalError{Msg: "Here Could not set Issuance"}
+	}
+
+	return nil
+}
+
+// Revoke ...
+func (s *IssuanceState) Revoke(signature, issuer string) error {
+	issuance, err := s.GetIssuance(signature, issuer)
+	if err != nil {
+		logger.Error(err)
+		return &processor.InvalidTransactionError{Msg: "Could not get issuance"}
+	}
+
+	issuance.RevokationStatus = true
+	err = s.SaveIssuance(issuance)
+	if err != nil {
+		logger.Errorf("ERROR", err)
+		return &processor.InternalError{Msg: "Could not set Issuance"}
 	}
 
 	return nil

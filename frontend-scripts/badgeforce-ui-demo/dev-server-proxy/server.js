@@ -52,7 +52,7 @@ app.get('/batch_statuses', (req, res) => {
         if(err) {
             console.log(err)
             res.status(500).json(err);
-        } 
+        }
         res.status(response.statusCode).json(response.body)
     })
 })

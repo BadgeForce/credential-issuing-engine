@@ -452,6 +452,193 @@ $root.issuer_pb = (function() {
         return AnyData;
     })();
 
+    issuer_pb.Revoke = (function() {
+
+        /**
+         * Properties of a Revoke.
+         * @memberof issuer_pb
+         * @interface IRevoke
+         * @property {string|null} [signature] Revoke signature
+         */
+
+        /**
+         * Constructs a new Revoke.
+         * @memberof issuer_pb
+         * @classdesc Represents a Revoke.
+         * @implements IRevoke
+         * @constructor
+         * @param {issuer_pb.IRevoke=} [properties] Properties to set
+         */
+        function Revoke(properties) {
+            if (properties)
+                for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                    if (properties[keys[i]] != null)
+                        this[keys[i]] = properties[keys[i]];
+        }
+
+        /**
+         * Revoke signature.
+         * @member {string} signature
+         * @memberof issuer_pb.Revoke
+         * @instance
+         */
+        Revoke.prototype.signature = "";
+
+        /**
+         * Creates a new Revoke instance using the specified properties.
+         * @function create
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {issuer_pb.IRevoke=} [properties] Properties to set
+         * @returns {issuer_pb.Revoke} Revoke instance
+         */
+        Revoke.create = function create(properties) {
+            return new Revoke(properties);
+        };
+
+        /**
+         * Encodes the specified Revoke message. Does not implicitly {@link issuer_pb.Revoke.verify|verify} messages.
+         * @function encode
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {issuer_pb.IRevoke} message Revoke message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Revoke.encode = function encode(message, writer) {
+            if (!writer)
+                writer = $Writer.create();
+            if (message.signature != null && message.hasOwnProperty("signature"))
+                writer.uint32(/* id 1, wireType 2 =*/10).string(message.signature);
+            return writer;
+        };
+
+        /**
+         * Encodes the specified Revoke message, length delimited. Does not implicitly {@link issuer_pb.Revoke.verify|verify} messages.
+         * @function encodeDelimited
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {issuer_pb.IRevoke} message Revoke message or plain object to encode
+         * @param {$protobuf.Writer} [writer] Writer to encode to
+         * @returns {$protobuf.Writer} Writer
+         */
+        Revoke.encodeDelimited = function encodeDelimited(message, writer) {
+            return this.encode(message, writer).ldelim();
+        };
+
+        /**
+         * Decodes a Revoke message from the specified reader or buffer.
+         * @function decode
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @param {number} [length] Message length if known beforehand
+         * @returns {issuer_pb.Revoke} Revoke
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Revoke.decode = function decode(reader, length) {
+            if (!(reader instanceof $Reader))
+                reader = $Reader.create(reader);
+            var end = length === undefined ? reader.len : reader.pos + length, message = new $root.issuer_pb.Revoke();
+            while (reader.pos < end) {
+                var tag = reader.uint32();
+                switch (tag >>> 3) {
+                case 1:
+                    message.signature = reader.string();
+                    break;
+                default:
+                    reader.skipType(tag & 7);
+                    break;
+                }
+            }
+            return message;
+        };
+
+        /**
+         * Decodes a Revoke message from the specified reader or buffer, length delimited.
+         * @function decodeDelimited
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+         * @returns {issuer_pb.Revoke} Revoke
+         * @throws {Error} If the payload is not a reader or valid buffer
+         * @throws {$protobuf.util.ProtocolError} If required fields are missing
+         */
+        Revoke.decodeDelimited = function decodeDelimited(reader) {
+            if (!(reader instanceof $Reader))
+                reader = new $Reader(reader);
+            return this.decode(reader, reader.uint32());
+        };
+
+        /**
+         * Verifies a Revoke message.
+         * @function verify
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {Object.<string,*>} message Plain object to verify
+         * @returns {string|null} `null` if valid, otherwise the reason why it is not
+         */
+        Revoke.verify = function verify(message) {
+            if (typeof message !== "object" || message === null)
+                return "object expected";
+            if (message.signature != null && message.hasOwnProperty("signature"))
+                if (!$util.isString(message.signature))
+                    return "signature: string expected";
+            return null;
+        };
+
+        /**
+         * Creates a Revoke message from a plain object. Also converts values to their respective internal types.
+         * @function fromObject
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {Object.<string,*>} object Plain object
+         * @returns {issuer_pb.Revoke} Revoke
+         */
+        Revoke.fromObject = function fromObject(object) {
+            if (object instanceof $root.issuer_pb.Revoke)
+                return object;
+            var message = new $root.issuer_pb.Revoke();
+            if (object.signature != null)
+                message.signature = String(object.signature);
+            return message;
+        };
+
+        /**
+         * Creates a plain object from a Revoke message. Also converts values to other types if specified.
+         * @function toObject
+         * @memberof issuer_pb.Revoke
+         * @static
+         * @param {issuer_pb.Revoke} message Revoke
+         * @param {$protobuf.IConversionOptions} [options] Conversion options
+         * @returns {Object.<string,*>} Plain object
+         */
+        Revoke.toObject = function toObject(message, options) {
+            if (!options)
+                options = {};
+            var object = {};
+            if (options.defaults)
+                object.signature = "";
+            if (message.signature != null && message.hasOwnProperty("signature"))
+                object.signature = message.signature;
+            return object;
+        };
+
+        /**
+         * Converts this Revoke to JSON.
+         * @function toJSON
+         * @memberof issuer_pb.Revoke
+         * @instance
+         * @returns {Object.<string,*>} JSON object
+         */
+        Revoke.prototype.toJSON = function toJSON() {
+            return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+        };
+
+        return Revoke;
+    })();
+
     issuer_pb.Issuance = (function() {
 
         /**

@@ -6,7 +6,7 @@ import * as namespaces from './namespace_prefixes';
 const {createHash} = require('crypto');
 const uuidv4 = require('uuid/v4');
 const protobuf = require('sawtooth-sdk/protobuf');
-const {AcademicCredential, Core, Payload, PayloadAction, AnyData } = require('../protos/credentials/compiled').issuer_pb;
+const {AcademicCredential, Core, Payload, PayloadAction, AnyData, Revoke } = require('../protos/credentials/compiled').issuer_pb;
 const google  = require('../protos/credentials/compiled').google;
 
 
@@ -89,6 +89,28 @@ export const issue = async (coreData, signer) => {
         const namespaceAddresses = [
             namespaces.makeAddress(namespaces.ISSUANCE, academicCred.signature.concat(signer.getPublicKey().asHex())),
             namespaces.makeAddress(namespaces.ACADEMIC, core.recipient.concat(core.name).concat(core.institutionId))
+        ];
+
+        console.log('namespaceAddresses', namespaceAddresses)
+
+        const inputs = [...namespaceAddresses], outputs = [...namespaceAddresses];
+        return await submitBatch(newSingleBatch(inputs, outputs, signer, [], payload));
+    } catch (error) {
+        throw new Error(error);
+    }
+}
+
+export const revoke = async (signature, signer) => {    
+    try {
+        const revokation = Revoke.create(signature);
+        // we are going to wrap this data in google.protobuf.any, to allow for arbitrary data passing in our 1 transaction handler many subhandler scheme 
+        const revokationAny = google.protobuf.Any.create({
+            type_url: 'github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb.Revoke', value: Revoke.encode(revokation).finish()
+        })
+
+        const payload = getPayload(revokationAny, PayloadAction.REVOKE);
+        const namespaceAddresses = [
+            namespaces.makeAddress(namespaces.ISSUANCE, signature.concat(signer.getPublicKey().asHex())),
         ];
 
         console.log('namespaceAddresses', namespaceAddresses)

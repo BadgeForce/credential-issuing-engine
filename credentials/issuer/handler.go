@@ -65,6 +65,24 @@ func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *pr
 	return nil
 }
 
+// RevokeCredentialHandler ...
+func RevokeCredentialHandler(request *processor_pb2.TpProcessRequest, context *processor.Context, data interface{}) error {
+	var revoke issuer_pb.Revoke
+	payload := data.(*issuer_pb.Payload)
+	err := ptypes.UnmarshalAny(payload.Data.Data, &revoke)
+	if err != nil {
+		logger.Error(err)
+		return &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
+	}
+
+	err = issuance.NewIssuanceState(context).Revoke(revoke.GetSignature(), request.GetHeader().GetSignerPublicKey())
+	if err != nil {
+		return &processor.InternalError{Msg: "Could not update issuance"}
+	}
+
+	return nil
+}
+
 // NewCredentialsTP ...
 func NewCredentialsTP(validator string) *processor.TransactionProcessor {
 	subHandlers := make(map[string]common.SubHandler)

@@ -167,7 +167,7 @@ export class Verifier extends Component {
     }
     render() {
         return (
-            <Grid style={{paddingTop: 100}} container columns={2} stackable>
+            <Grid style={{paddingTop: 100, height: '100vh'}} container columns={2} stackable>
                 <Dimmer inverted active={this.state.loading.toggle}>
                     <Loader indeterminate>{this.state.loading.message}</Loader>
                 </Dimmer>
