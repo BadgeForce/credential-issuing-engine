@@ -19,20 +19,25 @@ export class AccountManager extends BadgeForceBase {
         super();
         this.account = null;
         this.accountErrors = {
-            accountNotFound: new Error('Account not imported, import or create new account'),
-            invalidPassword: new Error('Invalid password')
+            accountNotFound: 'Account not imported, import or create new account',
+            invalidPassword: 'Invalid password'
         }
     }
     
-    importAccount(files, password, callback) {
+    importAccount(files, password, finish) {
         try {
             const file = files.item(0);
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 const contents = e.target.result;
                 this.account = new BadgeForceAccount(JSON.parse(contents).account);
-                this.decryptAccount(password)
-                callback(this.account);
+
+                try {
+                    this.decryptAccount(password);
+                    finish(this.account, null);
+                } catch (error) {
+                    finish(null, error);
+                }
             }
             reader.readAsText(file);
         }
@@ -43,38 +48,29 @@ export class AccountManager extends BadgeForceBase {
 
     newAccount(password) {
         try {
-            console.log(password);
             const keys = this.newAccessKeyPair(password);
-            console.log(keys);
             const signer = new CryptoFactory(context).newSigner(context.newRandomPrivateKey());
             const account = JSON.stringify({publicKey: signer.getPublicKey().asHex(), privateKey: signer._privateKey.asHex()});
             this.account = new BadgeForceAccount({account: cryptico.encrypt(account, keys.pub, keys.priv).cipher});
-            console.log(this.account)
             return true;
         } catch (error) {
             throw new Error(error);
         }
     }
 
-    decryptAccount(password, retrycb) {
+    decryptAccount(password) {
         try {
-            console.log(password)
             const keys = this.newAccessKeyPair(password);
-            console.log(keys)
             const {status, plaintext} = cryptico.decrypt(this.account.account, keys.priv);
             if(status === 'failure') {
-                throw this.accountErrors.invalidPassword;
+                throw new Error(this.accountErrors.invalidPassword);
             }
 
             const decrypted = JSON.parse(plaintext);
             this.account.signer = new CryptoFactory(context).newSigner(new Secp256k1PrivateKey(Buffer.from(decrypted.privateKey, 'hex')));
             this.account.publicKey = this.account.signer.getPublicKey().asHex();
-
-            // if(retrycb) retrycb({signer, publicKey});
-            console.log(this.account);
         } catch (error) {
-            console.log(error);
-            throw new Error(error);
+            throw new Error(error.message);
         }
     }
     

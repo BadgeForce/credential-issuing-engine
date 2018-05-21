@@ -92,10 +92,10 @@ export class BadgeForceBase {
         }
     }
 
-    async retry(errorFilter, times, method, args) {
+    async retry(errorFilter, times, method, args, done) {
         const opts = {errorFilter, times};
+        console.log(args);
         const retryMethod = (retrycb) => method(...args, retrycb);
-        const done = (error, results) => error ? Promise.reject(error) : Promise.resolve(results);
         retry(opts, retryMethod, done);
     }
 }

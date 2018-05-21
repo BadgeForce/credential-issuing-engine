@@ -1,9 +1,12 @@
 import React, { Component } from 'react';
 import DatePicker from 'react-datepicker';
-import { Loader, Icon, Feed, Header, Form, Dimmer, Grid, Sidebar, Menu, Button } from 'semantic-ui-react'
+import { Loader, Icon, Feed, Header, Form, Dimmer, Grid, Sidebar, Menu, Button, Confirm, Input} from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
+import { ToastContainer, toast } from "react-toastify";
 
 import 'react-datepicker/dist/react-datepicker.css';
+import 'react-toastify/dist/ReactToastify.css';
+
 const moment = require('moment');
 class Transaction extends Component {
     constructor(props) {
@@ -119,6 +122,33 @@ class NewAccountForm extends Component {
             </Form>
         )
     }
+
+
+}
+
+class PasswordConfirm extends Component {
+    state = {password: ''};
+    confirmInput = (onchange) => {
+        return (
+            <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 50}}>
+              <Input type='password' onChange={onchange} placeholder='re-enter password' />
+            </div>
+        );
+    }
+    render() {
+        return (
+            <Confirm
+              header='Invalid Password For Account'
+              content={this.confirmInput((e, password) => {
+                this.setState({password})
+              })}
+              onCancel={this.props.cancel}
+              onConfirm={() => this.props.finish(this.state.password)}
+              open={this.props.open}
+              confirmButton='Try Again'
+          />
+        );
+    }
 }
 export class Issuer extends Component {
     constructor(props) {
@@ -131,6 +161,8 @@ export class Issuer extends Component {
             results: null,
             loading: {toggle: false, message: ''},
             visible: false,
+            confirmPassword: false,
+            error: null,
             transactions: {}
         }
 
@@ -145,9 +177,12 @@ export class Issuer extends Component {
         this.importAccount = this.importAccount.bind(this);
         this.createAccount = this.createAccount.bind(this);
         this.downloadKeyPair = this.downloadKeyPair.bind(this);
+        this.notify = this.notify.bind(this);
         this.badgeforceIssuer = new bjs.Issuer('', this.handleTransactionsUpdate);
     }
-
+    notify(msg) {
+        toast(msg, { autoClose: 15000, type: toast.TYPE.ERROR, position: toast.POSITION.BOTTOM_LEFT });
+    }
     createAccount(password) {
         try {
             this.badgeforceIssuer.newAccount(password);
@@ -168,14 +203,16 @@ export class Issuer extends Component {
         this.setState({loading: {toggle: true, message: 'Importing Account'}, results: null, visible: false});
         try {
             const files = document.getElementById('accountUpload').files;
-            this.badgeforceIssuer.importAccount(files, password, async results => {
-                await this.sleep(3);
-                console.log(results);
-                this.setState({
-                    loading: {toggle: false, message: ''},
-                });
+            const finishCB = async (results, error) => {
+                await this.sleep(2);
+                const update = {loading: {toggle: false, message: ''}};
+                if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
+                    update['confirmPassword'] = true;
+                } 
+                this.setState(update);
                 document.getElementById('accountUpload').value = '';
-            });
+            }
+            this.badgeforceIssuer.importAccount(files, password, finishCB);
         } catch (error) {
             console.log(error);
             await this.sleep(3);
@@ -269,8 +306,20 @@ export class Issuer extends Component {
     render() {
         return (
             <div>
+                <PasswordConfirm finish={(password) => {
+                        this.setState({confirmPassword: false});
+                        try {
+                            this.badgeforceIssuer.decryptAccount(password);
+                        } catch (error) {
+                            this.notify(error.message);
+                        }
+                    }}
+                    open={this.state.confirmPassword} 
+                    cancel={() => this.setState({confirmPassword: false})}
+                />
+                <ToastContainer autoClose={8000} />
                 <div style={{paddingTop: 10}}>
-                    <Button floated='left' onClick={this.props.toggleSideMenu}>Menu</Button>
+                    <Button floated='left' onClick={this.props.toggleSideMenu}>{this.props.visible ? 'Close Menu' : 'Open Menu'}</Button>
                 </div>
                 <Grid style={{paddingTop: 10, height: '100vh', justifyContent: 'center'}} container columns={2} stackable>
                     <Dimmer inverted active={this.state.loading.toggle}>
@@ -297,7 +346,7 @@ export class Issuer extends Component {
 }
 
 export class IssuerSideOptionsOverlay extends Component {
-    state = { visible: false, active: 'issue' }
+    state = { visible: true, active: 'issue' }
     toggleVisibility = () => this.setState({ visible: !this.state.visible });
 
     render() {
@@ -329,7 +378,7 @@ export class IssuerSideOptionsOverlay extends Component {
                     </Menu.Item>
                 </Sidebar>
                 <Sidebar.Pusher>
-                    <Issuer active={this.state.active} toggleSideMenu={this.toggleVisibility}/> : null}
+                    <Issuer active={this.state.active} visible={this.state.visible} toggleSideMenu={this.toggleVisibility}/>
                 </Sidebar.Pusher>
                 </Sidebar.Pushable>
             </div>

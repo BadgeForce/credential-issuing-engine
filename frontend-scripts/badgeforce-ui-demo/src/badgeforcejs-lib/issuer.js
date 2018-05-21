@@ -29,19 +29,6 @@ export class Issuer extends AccountManager {
         }
     }
 
-    async decryptWithRetries(accountPassword, invalidPasswordCB, retrycb) {
-        try {
-            return this.decryptAccount(accountPassword, retrycb);
-        } catch (error) {
-            if(error.message === this.accountErrors.invalidPassword.message) {
-                invalidPasswordCB(error.message+' yooo bruh')
-                // this.currentPasswordCache = await invalidPasswordCB();
-                throw new Error(error);
-            }
-            throw new Error(error);
-        }
-    }
-
     async issueAcademic(coreData, signer, publicKey) {
         try {
             coreData.issuer = publicKey;
@@ -53,7 +40,7 @@ export class Issuer extends AccountManager {
             });
         } catch (error) {
             console.log(error)
-            throw new Error(error);
+            throw new Error(error.message);
         }
     }
 
