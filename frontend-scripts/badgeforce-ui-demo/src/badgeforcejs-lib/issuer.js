@@ -18,22 +18,11 @@ export class Issuer extends AccountManager {
         this.currentPasswordCache = null;
     }
 
-    async IssueAcademic(accountPassword, invalidPasswordCB) {
+    async issueAcademic(coreData) {
         try {
-            this.currentPasswordCache = accountPassword;
-            const errorFilter = err => { return [this.accountErrors.invalidPassword].filter(msg => {return err.message === msg})};
-            const {signer, publicKey} = await this.retry(errorFilter, 3, this.decryptWithRetries.bind(this), [accountPassword, invalidPasswordCB]);
-            return {finish: async coreData => await this.issueAcademic(coreData, signer, publicKey)};
-        } catch (error) {
-            throw new Error(error);
-        }
-    }
-
-    async issueAcademic(coreData, signer, publicKey) {
-        try {
-            coreData.issuer = publicKey;
+            coreData.issuer = this.account.publicKey;
             console.log(coreData);
-            const response = await issue(coreData, signer);
+            const response = await issue(coreData, this.account.signer);
             const batchForWatch = new bjs.Batch(response.link, new bjs.MetaData('ISSUE', `Issued ${coreData.name} credential to ${coreData.recipient}`, moment().toString()));
             this.batchStatusWatcher.subscribe(batchForWatch, (status) => {
                 console.log(status);

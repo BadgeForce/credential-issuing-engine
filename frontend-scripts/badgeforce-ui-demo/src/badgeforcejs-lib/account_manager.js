@@ -52,6 +52,8 @@ export class AccountManager extends BadgeForceBase {
             const signer = new CryptoFactory(context).newSigner(context.newRandomPrivateKey());
             const account = JSON.stringify({publicKey: signer.getPublicKey().asHex(), privateKey: signer._privateKey.asHex()});
             this.account = new BadgeForceAccount({account: cryptico.encrypt(account, keys.pub, keys.priv).cipher});
+            this.account.signer = signer;
+            this.account.publicKey = signer.getPublicKey().asHex();
             return true;
         } catch (error) {
             throw new Error(error);

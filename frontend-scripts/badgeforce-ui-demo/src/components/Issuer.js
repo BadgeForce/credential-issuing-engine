@@ -1,13 +1,15 @@
 import React, { Component } from 'react';
 import DatePicker from 'react-datepicker';
-import { Loader, Icon, Feed, Header, Form, Dimmer, Grid, Sidebar, Menu, Button, Confirm, Input} from 'semantic-ui-react'
+import { Loader, Icon, Feed, Header, Form, Dimmer, Grid, Confirm, Input, Tab, Message} from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 
 import 'react-datepicker/dist/react-datepicker.css';
 import 'react-toastify/dist/ReactToastify.css';
 
 const moment = require('moment');
+
+const base = new bjs.BadgeForceBase();
 class Transaction extends Component {
     constructor(props) {
         super(props);
@@ -66,25 +68,60 @@ class Transactions extends Component {
 }
 
 class RevokeForm extends Component {
-    state = {recipient: '', credentialName: '', institutionId: ''};
+    constructor(props){
+        super(props);
+        this.state = {recipient: '', credentialName: '', institutionId: '', formErrors: [], formError: false};
+        this.showFormErrors = this.showFormErrors.bind(this);
+        this.isValidForm = this.isValidForm.bind(this);
+    }
     handleRevoke = async() => {
-        try {
-            await this.props.handle(this.state)
-            this.setState({recipient: '', credentialName: '', institutionId: ''});
-        } catch (error) {
-            console.log(error);
-            this.setState({recipient: '', credentialName: '', institutionId: ''});
+        if(this.isValidForm()){
+            try {
+                await this.props.handle(this.state)
+                this.setState({recipient: '', credentialName: '', institutionId: '', formErrors: [], formError: false});
+            } catch (error) {
+                console.log(error);
+                this.setState({recipient: '', credentialName: '', institutionId: '', formErrors: [], formError: false});
+            }       
         }
+    }
+    isValidForm() {
+        const errors = [
+            !base.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
+            this.state.credentialName === '' ? new Error('Credential name is required') : null,
+            this.state.institutionId === '' ? new Error('Institution ID is required') : null,
+        ].filter(error => {
+            return error !== null;
+        });
+
+        if(errors.length > 0) {
+            this.setState({formErrors: errors, formError: true});
+            return false
+        }
+
+        this.setState({formErrors: errors, formError: false});
+        return true;
+    }
+    showFormErrors() {
+        return (
+            <Message error
+                header='Problems with your input'
+                content={<Message.List items={this.state.formErrors.map((error, i) => {
+                    return <Message.Item key={i} content={error.message} />
+                })} />}
+            />
+        )
     }
     render(){
         return (
-            <Form size='large' style={{paddingTop: 25}}>
-                <Form.Input value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
-                <Form.Input value={this.state.credentialName}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, credentialName) => this.setState({credentialName: credentialName.value})} />
-                <Form.Input value={this.state.institutionId}  mobile={4} tablet={12} placeholder='Institution ID' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />
+            <Form size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+                <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
+                <Form.Input error={this.state.formError ? true : undefined} value={this.state.credentialName}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, credentialName) => this.setState({credentialName: credentialName.value})} />
+                <Form.Input error={this.state.formError ? true : undefined} value={this.state.institutionId}  mobile={4} tablet={12} placeholder='Institution ID' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />
                 <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
                     <Form.Button style={{display: 'flex', alignSelf: 'flex-start'}} color='red' onClick={this.handleRevoke} size='large' content='Revoke' icon='ban' labelPosition='right'/>
                 </Form.Group>
+                {this.state.formErrors.length > 0 ? this.showFormErrors() : null}
             </Form>
         )
     }
@@ -122,8 +159,88 @@ class NewAccountForm extends Component {
             </Form>
         )
     }
+}
 
+class IssueForm extends Component {
+    constructor(props){
+        super(props);
+        this.state = {recipient: '', dateEarned: null, name: '', expiration: null, formErrors: [], formError: false};
+        console.log(this.props.warn);
+        this.showFormErrors = this.showFormErrors.bind(this);
+        this.showNoAccountWarning = this.showNoAccountWarning.bind(this);
+        this.isValidForm = this.isValidForm.bind(this);
+    }
+    handleIssue = async () => {
+        if(this.isValidForm()) {
+            try {
+                await this.props.handle(this.state);
+                this.setState({recipient: '', dateEarned: null, name: '', expiration: null, formErrors: [], formError: false});
+            } catch (error) {
+                console.log(error);
+                this.setState({recipient: '', dateEarned: null, name: '', expiration: null, formErrors: [], formError: false});
+            }
+        }
+    }
+    isValidForm() {
+        const errors = [
+            !base.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
+            this.state.name === '' ? new Error('Credential name is required') : null,
+            this.state.dateEarned === null ? new Error('Date earned is required') : null,
+            this.state.expiration && moment().isAfter(this.state.expiration) ? new Error('Cannot issue an expired credential') : null
+        ].filter(error => {
+            return error !== null;
+        });
 
+        if(errors.length > 0) {
+            this.setState({formErrors: errors, formError: true});
+            return false
+        }
+
+        this.setState({formErrors: errors, formError: false});
+        return true;
+    }
+
+    showNoAccountWarning() {
+        return (
+            <Message 
+                header='No account detected'
+                content='Could not detect an account, please import or create one using the Create Account tab'
+            />
+        )
+    }
+    showFormErrors() {
+        return (
+            <Message error
+                header='Problems with your input'
+                content={<Message.List items={this.state.formErrors.map((error, i) => {
+                    return <Message.Item key={i} content={error.message} />
+                })} />}
+            />
+        )
+    }
+    render(){
+        return (
+            <Form size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+                <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
+                <Form.Input error={this.state.formError ? true : undefined} value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />
+                <Form.Group widths='equal'>
+                    <Form.Field error={this.state.formError ? true : undefined} style={{display: 'flex', alignItems: 'flex-end', justifyContent: 'center'}}>
+                        <h4 style={{marginRight: 10}}>Date Earned:</h4>              
+                        <DatePicker selected={this.state.dateEarned} placeholderText="Date Earned" onChange={(dateEarned) => this.setState({dateEarned})} />
+                    </Form.Field>
+                    <Form.Field error={this.state.formError ? true : undefined} style={{display: 'flex', alignItems: 'flex-end', justifyContent: 'center'}}>
+                        <h4 style={{marginRight: 10}}>Expiration:</h4>
+                        <DatePicker selected={this.state.expiration} placeholderText="Expiration" onChange={(expiration) => this.setState({expiration})} />
+                    </Form.Field>
+                </Form.Group>
+                <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
+                    <Form.Button disabled={this.props.warn} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleIssue} size='large' content='Issue Credential' icon='send' labelPosition='right'/>
+                </Form.Group>
+                {this.state.formErrors.length > 0 ? this.showFormErrors() : null}
+                {this.props.warn ? this.showNoAccountWarning() : null}
+            </Form>
+        )
+    }
 }
 
 class PasswordConfirm extends Component {
@@ -154,16 +271,13 @@ export class Issuer extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            recipient: '', 
-            dateEarned: null,
-            name: '',
-            expiration: null,
             results: null,
             loading: {toggle: false, message: ''},
             visible: false,
             confirmPassword: false,
             error: null,
-            transactions: {}
+            transactions: {},
+            toastId: null
         }
 
         this.demoCred = {
@@ -177,11 +291,15 @@ export class Issuer extends Component {
         this.importAccount = this.importAccount.bind(this);
         this.createAccount = this.createAccount.bind(this);
         this.downloadKeyPair = this.downloadKeyPair.bind(this);
-        this.notify = this.notify.bind(this);
+
         this.badgeforceIssuer = new bjs.Issuer('', this.handleTransactionsUpdate);
-    }
-    notify(msg) {
-        toast(msg, { autoClose: 15000, type: toast.TYPE.ERROR, position: toast.POSITION.BOTTOM_LEFT });
+        this.panes = [
+            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
+            { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm handle={console.log} />}</Tab.Pane> },
+            { menuItem: 'Create Account', render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
+        ]
+
+       
     }
     createAccount(password) {
         try {
@@ -240,37 +358,33 @@ export class Issuer extends Component {
         }));
     }
 
-    async handleIssue() {
-        this.setState({loading: {toggle: true, message: 'loading'}, results: null, visible: false});
+    async handleIssue(data) {
+        const toastId = this.props.notify('Issuing Credential', toast.TYPE.INFO);
+        this.setState({results: null, visible: false, toastId, loading: true});
         try {
+            const {recipient, dateEarned, name, expiration} = data;
             const coreData = {
                 ...this.demoCred,
-                recipient: this.state.recipient,
-                dateEarned: this.state.dateEarned.unix().toString(),
-                expiration: this.state.expiration.unix().toString(),
-                name: this.state.name
+                recipient,
+                dateEarned: dateEarned.unix().toString(),
+                expiration: expiration.unix().toString(),
+                name
             }
 
-            const results = await this.badgeforceIssuer.IssueAcademic(coreData, console.log);
+            const results = await this.badgeforceIssuer.issueAcademic(coreData);
             this.setState({
                 results, 
-                recipient: '', 
-                dateEarned: null,
-                name: '',
-                expiration: null,
                 loading: {toggle: false, message: ''},
-                visible: true
+                visible: true,
+                toastId: null
             });
         } catch (error) {
             await this.sleep(4);
             this.setState({
-                recipient: '', 
-                dateEarned: null,
-                name: '',
-                expiration: null,
                 results: null,
                 loading: {toggle: false, message: ''},
-                error
+                error,
+                toastId: null
             });
         }
     }
@@ -286,26 +400,9 @@ export class Issuer extends Component {
         }
     }
 
-    showIssueForm() {
-        return (
-            <Form size='large' style={{paddingTop: 25}}>
-                <Form.Input value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
-                <Form.Input value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />
-                
-                <Form.Field style={{display: 'flex', alignItems: 'center', justifyContent: 'space-around'}} mobile={4} tablet={12}>
-                    Date Earned:<DatePicker selected={this.state.dateEarned} placeholderText="Date Earned" onChange={(dateEarned) => this.setState({dateEarned})} />
-                    Expiration:<DatePicker selected={this.state.expiration} placeholderText="Expiration" onChange={(expiration) => this.setState({expiration})}/>
-                </Form.Field>
-                <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                    <Form.Button style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleIssue} size='large' content='Issue Credential' icon='send' labelPosition='right'/>
-                </Form.Group>
-            </Form>
-        );
-    }
-
     render() {
         return (
-            <div>
+            <Grid style={{paddingTop: 100, height: '100vh', justifyContent: 'center'}} computer='sixteen' mobile={4} tablet={12} container columns={1} stackable>
                 <PasswordConfirm finish={(password) => {
                         this.setState({confirmPassword: false});
                         try {
@@ -317,71 +414,17 @@ export class Issuer extends Component {
                     open={this.state.confirmPassword} 
                     cancel={() => this.setState({confirmPassword: false})}
                 />
-                <ToastContainer autoClose={8000} />
-                <div style={{paddingTop: 10}}>
-                    <Button floated='left' onClick={this.props.toggleSideMenu}>{this.props.visible ? 'Close Menu' : 'Open Menu'}</Button>
-                </div>
-                <Grid style={{paddingTop: 10, height: '100vh', justifyContent: 'center'}} container columns={2} stackable>
-                    <Dimmer inverted active={this.state.loading.toggle}>
-                        <Loader indeterminate>{this.state.loading.message}</Loader>
-                    </Dimmer>
-                    
-                    <Grid.Column  mobile={4} tablet={12}>
-                        <Header as='h1' textAlign='center'>   
-                            <Header.Content>
-                                BadgeForce University Issuer
-                            </Header.Content>
-                            <Header.Subheader content='Issue some credentials to whoever you want, from our fictitous BadgeForce Issuer. These credentials are issued for REAL, so DO NOT USE ANY SENSITIVE DATA'/>
-                        </Header>
-                        {this.props.active === 'issue' ? this.showIssueForm() : null}
-                        {this.props.active === 'revoke' ? <RevokeForm handle={console.log} /> : null}
-                        {this.props.active === 'account' ? <NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} /> : null}
-                        <Transactions transactions={this.state.transactions}/>
-                    </Grid.Column>
-                </Grid>
-            </div>
-
+                <Grid.Column computer='sixteen' mobile={4} tablet={12}>
+                    <Header as='h1' textAlign='center'>   
+                        <Header.Content>
+                            BadgeForce University Issuer
+                        </Header.Content>
+                        <Header.Subheader content='Issue some credentials to whoever you want, from our fictitous BadgeForce Issuer. These credentials are issued for REAL, so DO NOT USE ANY SENSITIVE DATA'/>
+                    </Header>
+                    <Tab menu={{ fluid: true, vertical: true}} menuPosition='left' panes={this.panes} />
+                    <Transactions transactions={this.state.transactions}/>
+                </Grid.Column>
+            </Grid>
         );
-    }
-}
-
-export class IssuerSideOptionsOverlay extends Component {
-    state = { visible: true, active: 'issue' }
-    toggleVisibility = () => this.setState({ visible: !this.state.visible });
-
-    render() {
-        const { visible } = this.state
-        return (
-            <div>
-                <Sidebar.Pushable as={Grid}>
-                    <Sidebar
-                        as={Menu}
-                        animation='overlay'
-                        width='thin'
-                        direction='right'
-                        visible={visible}
-                        icon='labeled'
-                        vertical
-                        inverted
-                    >
-                    <Menu.Item name='issue' onClick={() => this.setState({active: 'issue'})}>
-                        <Icon name='send' />
-                        Issue Credential
-                    </Menu.Item>
-                    <Menu.Item name='revoke' onClick={() => this.setState({active: 'revoke'})}>
-                        <Icon name='ban' />
-                        Revoke Credential
-                    </Menu.Item>
-                    <Menu.Item name='account' onClick={() => this.setState({active: 'account'})}>
-                        <Icon name='key' />
-                        Create New Account
-                    </Menu.Item>
-                </Sidebar>
-                <Sidebar.Pusher>
-                    <Issuer active={this.state.active} visible={this.state.visible} toggleSideMenu={this.toggleVisibility}/>
-                </Sidebar.Pusher>
-                </Sidebar.Pushable>
-            </div>
-        )
     }
 }

@@ -1,5 +1,8 @@
+import { Buffer } from 'buffer';
+
 const retry = require('async/retry');
 const {createHash} = require('crypto');
+const secp256k1 = require('secp256k1');
 const {AcademicCredential, Core, StorageHash, Issuance} = require('../protos/credentials/compiled').issuer_pb;
 const REST_API_CHAIN = process.env.NODE_ENV === 'development' ? "http://localhost:3010" : 'http://127.0.0.1:8008';
 const REST_API_IPFS = process.env.NODE_ENV === 'development' ? "http://localhost:3010/ipfs" : 'http://127.0.0.1:8080/ipfs';
@@ -26,6 +29,10 @@ export class Results {
 }
 
 export class BadgeForceBase {
+
+    isValidPublicKey(key) {
+        return secp256k1.publicKeyVerify(Buffer.from(key, 'hex'));
+    }
 
     decodeDegree(data) {
         return AcademicCredential.decode(new Uint8Array(data));
