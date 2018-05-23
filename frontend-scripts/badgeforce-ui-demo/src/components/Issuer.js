@@ -22,7 +22,7 @@ class Transaction extends Component {
         return (
             <Feed.Event>
                 <Feed.Label>
-                    <Icon name='circle' />
+                    <Icon name='circle' color={this.state.data.status !== 'COMMITTED' ? 'orange': 'green'}/>
                 </Feed.Label>
                 <Feed.Content>
                     <Feed.Summary>
@@ -45,20 +45,13 @@ class Transaction extends Component {
 }
 
 class Transactions extends Component {
-    constructor(props) {
-        super(props);
-        this.state = {
-            account: this.props.transactions
-        }
-        console.log(this.props.transactions);
-    }
     render() {
         return (
             <div style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-around'}}>
                 <Feed>
-                    {Object.keys(this.props.transactions).map((val, i) => {
+                    {this.props.transactions.map((watcher, i) => {
                         return (
-                            <Transaction data={this.props.transactions[val]} id={i} key={val}/>
+                            <Transaction data={watcher.transaction} id={watcher.id} key={i}/>
                         );
                     })}
                 </Feed>
@@ -128,33 +121,62 @@ class RevokeForm extends Component {
 }
 
 class NewAccountForm extends Component {
-    state = {password: ''};
+    state = {password: '', name: '', formErrors: [], formError: false};
     createAccount = async () => {
-        try {
-            await this.props.handleCreateAccount(this.state.password);
-            this.setState({password: ''});
-        } catch (error) {
-            console.log(error);
-            this.setState({password: ''});
+        if(this.isValidForm()) {
+            try {
+                await this.props.handleCreateAccount(this.state.password, this.state.name);
+                this.setState({password: '', name: '', formErrors: [], formError: false});
+            } catch (error) {
+                console.log(error);
+                this.setState({password: '', name: '', formErrors: [], formError: false});
+            }
         }
+    }
+    isValidForm = () => {
+        const errors = [
+            this.state.password === '' ? new Error('Password cannot be empty') : null
+        ].filter(error => {
+            return error !== null;
+        });
+
+        if(errors.length > 0) {
+            this.setState({formErrors: errors, formError: true});
+            return false
+        }
+
+        this.setState({formErrors: errors, formError: false});
+        return true;
+    }
+    showFormErrors = () => {
+        return (
+            <Message error
+                header='Problems with your input'
+                content={<Message.List items={this.state.formErrors.map((error, i) => {
+                    return <Message.Item key={i} content={error.message} />
+                })} />}
+            />
+        )
     }
     importAccount = async (e) => {
         try {
             await this.props.handleImportAccount(e, this.state.password);
-            this.setState({password: ''});
+            this.setState({password: '', name: '', formErrors: [], formError: false});
         } catch (error) {
             console.log(error);
-            this.setState({password: ''});
+            this.setState({password: '', name: '', formErrors: [], formError: false});
         }
     }
     render(){
         return (
-            <Form size='large' style={{paddingTop: 25}}>
-                <Form.Input type='password' placeholder='very strong password' value={this.state.password}  mobile={4} tablet={12} onChange={(e, password) => this.setState({password: password.value})} />
+            <Form size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+                <Form.Input error={this.state.formError ? true : undefined} type='password' placeholder='very strong password' value={this.state.password}  mobile={4} tablet={12} onChange={(e, password) => this.setState({password: password.value})} />
+                <Form.Input placeholder='Name for account' value={this.state.name}  mobile={4} tablet={12} onChange={(e, name) => this.setState({name: name.value})} />
                 <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
                     <Form.Button style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.createAccount} size='large' content='Create Account' icon='key' labelPosition='right'/>
                     <Form.Button style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' onClick={() => document.getElementById('accountUpload').click()} size='large' content='Upload Account File' icon='upload' labelPosition='right'/>
                 </Form.Group>
+                {this.state.formErrors.length > 0 ? this.showFormErrors() : null}
                 <input type="file" id="accountUpload" onChange={this.importAccount} style={{display: 'none'}} />  
             </Form>
         )
@@ -276,7 +298,7 @@ export class Issuer extends Component {
             visible: false,
             confirmPassword: false,
             error: null,
-            transactions: {},
+            transactions: [],
             toastId: null
         }
 
@@ -301,32 +323,38 @@ export class Issuer extends Component {
 
        
     }
-    createAccount(password) {
+    createAccount(password, name) {
         try {
             this.badgeforceIssuer.newAccount(password);
-            this.downloadKeyPair();
+            this.downloadKeyPair(name);
+            this.props.notify('Account Created', toast.TYPE.SUCCESS);
         } catch (error) {
             console.log(error);
+            this.props.notify('Something Went Wrong!', toast.TYPE.ERROR);
         }
     }
-    downloadKeyPair() {
+    downloadKeyPair(name) {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(this.badgeforceIssuer.account.downloadStr);
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href",     dataStr);
-        downloadAnchorNode.setAttribute("download", `badgeforce-key${moment().toString()}.json`);
+        downloadAnchorNode.setAttribute("download", `badgeforce-keys${name ? name: moment().toISOString()}.json`);
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
     async importAccount(e, password) {
-        this.setState({loading: {toggle: true, message: 'Importing Account'}, results: null, visible: false});
+        this.setState({results: null, visible: false, loading: true});
         try {
             const files = document.getElementById('accountUpload').files;
             const finishCB = async (results, error) => {
-                await this.sleep(2);
                 const update = {loading: {toggle: false, message: ''}};
-                if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
-                    update['confirmPassword'] = true;
-                } 
+                if(error) {
+                    if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
+                        update['confirmPassword'] = true;
+                    } else {
+                        this.props.updateToast(this.state.toastId, 'Something went wrong', toast.TYPE.ERROR);
+                    }
+                }
+                this.props.notify('Account Imported', toast.TYPE.SUCCESS);
                 this.setState(update);
                 document.getElementById('accountUpload').value = '';
             }
@@ -349,18 +377,15 @@ export class Issuer extends Component {
 		});
     }
 
-    handleTransactionsUpdate(id, transaction) {
-        console.log(id, transaction)
-        this.setState(prevState => ({
-            transactions: {
-                ...prevState.transactions, id: transaction
-            }
-        }));
+    handleTransactionsUpdate(transaction) {
+        const transactions = this.state.transactions.map(tx => {
+            return tx.id === transaction.id ? transaction : tx;
+        })
+        this.setState({transactions});
     }
 
     async handleIssue(data) {
-        const toastId = this.props.notify('Issuing Credential', toast.TYPE.INFO);
-        this.setState({results: null, visible: false, toastId, loading: true});
+        this.setState({results: null, visible: false, loading: true});
         try {
             const {recipient, dateEarned, name, expiration} = data;
             const coreData = {
@@ -371,15 +396,16 @@ export class Issuer extends Component {
                 name
             }
 
-            const results = await this.badgeforceIssuer.issueAcademic(coreData);
-            this.setState({
-                results, 
+            const watcher = await this.badgeforceIssuer.issueAcademic(coreData);
+            console.log(watcher);
+            this.setState(prevState => ({
                 loading: {toggle: false, message: ''},
                 visible: true,
-                toastId: null
-            });
+                toastId: null,
+                transactions: [...prevState.transactions, watcher]
+            }));
         } catch (error) {
-            await this.sleep(4);
+            this.props.notify('Something Went Wrong While Issuing!', toast.TYPE.ERROR);
             this.setState({
                 results: null,
                 loading: {toggle: false, message: ''},
@@ -408,7 +434,11 @@ export class Issuer extends Component {
                         try {
                             this.badgeforceIssuer.decryptAccount(password);
                         } catch (error) {
-                            this.notify(error.message);
+                            if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
+                                this.props.updateToast(this.state.toastId, 'Password still invalid, try importing again', toast.TYPE.ERROR);
+                            } else {
+                                this.props.updateToast(this.state.toastId, 'Something went wrong', toast.TYPE.ERROR);
+                            }
                         }
                     }}
                     open={this.state.confirmPassword} 

@@ -19,9 +19,9 @@ export class Batch {
 }
 
 export class Watcher {
-    constructor(transaction, callback) {
+    constructor(transaction, done) {
         this.transaction = transaction;
-        this.callback = callback;
+        this.done = done;
         this.id = transaction.link;
     }
 
@@ -36,7 +36,7 @@ export class Watcher {
                 await this.poll();
             }
 
-            this.callback(this.transaction.status);
+            this.done(this);
         } catch (error) {
             throw new Error(error);   
         }
@@ -44,7 +44,7 @@ export class Watcher {
     async poll() {
         try {
             const response = await window.fetch(new Request(this.id, {method: 'GET', headers: {'Content-Type': 'application/json'}}));
-            this.transaction.status = JSON.parse(await response.json()).data[0].status;
+            this.transaction.status = (await response.json()).data[0].status;
         } catch (error) {
             throw new Error(error);
         }
@@ -63,7 +63,7 @@ export class BatchStatusWatcher {
     subscribe(batch, cb) {
         const watcher = new Watcher(batch, cb);
         watcher.watch();
-        this.store(watcher.id, watcher.transaction);
+        return watcher;
     }
 
     unsubscribe(watcherLink) {

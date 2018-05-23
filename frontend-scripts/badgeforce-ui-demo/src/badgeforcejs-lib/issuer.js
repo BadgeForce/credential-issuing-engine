@@ -14,7 +14,7 @@ export class Issuer extends AccountManager {
         super();
         this.host = host;
         this.txWatcherCB = txWatcherCB;
-        this.batchStatusWatcher = new bjs.BatchStatusWatcher(this.txWatcherCB);
+        this.batchStatusWatcher = new bjs.BatchStatusWatcher(this.txWatcherCB.bind(this));
         this.currentPasswordCache = null;
     }
 
@@ -24,9 +24,7 @@ export class Issuer extends AccountManager {
             console.log(coreData);
             const response = await issue(coreData, this.account.signer);
             const batchForWatch = new bjs.Batch(response.link, new bjs.MetaData('ISSUE', `Issued ${coreData.name} credential to ${coreData.recipient}`, moment().toString()));
-            this.batchStatusWatcher.subscribe(batchForWatch, (status) => {
-                console.log(status);
-            });
+            return this.batchStatusWatcher.subscribe(batchForWatch, this.txWatcherCB);
         } catch (error) {
             console.log(error)
             throw new Error(error.message);
