@@ -9,6 +9,7 @@ export class Home extends Component {
         super(props);
         this.state = {
             active: 'verifier',
+            account: ''
         }
         this.notify = this.notify.bind(this);
         this.updateToast = this.updateToast.bind(this);
@@ -37,20 +38,24 @@ export class Home extends Component {
                     icon='labeled'
                     inverted
                 >   
-                    <Menu.Item name='verifier' onClick={() => this.setState({active: 'verifier'})}>
+                     <Menu.Item  header>
+                        <Icon name='key' />
+                        {this.state.account ? `Active Account: ${this.state.account}` : 'No Account Detected'}
+                    </Menu.Item >
+
+                    <Menu.Item position='right' name='verifier' onClick={() => this.setState({active: 'verifier'})}>
                         <Icon name='checkmark' />
                         Verifier
                     </Menu.Item>
-
                     <Menu.Item name='issuer' onClick={() => this.setState({active: 'issuer'})}>
                         <Icon name='university' />
                         Issuer
                     </Menu.Item>
-                    
+    
                 </Sidebar>
                 <Sidebar.Pusher>
                     <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
-                        {this.state.active === 'verifier' ? <Verifier updateToast={this.updateToast} notify={this.notify} /> : <Issuer updateToast={this.updateToast} notify={this.notify} />}
+                        {this.state.active === 'verifier' ? <Verifier updateToast={this.updateToast} notify={this.notify} /> : <Issuer updateAccount={(account => this.setState({account}))} updateToast={this.updateToast} notify={this.notify} />}
                     </div>
                 </Sidebar.Pusher>
             </Sidebar.Pushable>

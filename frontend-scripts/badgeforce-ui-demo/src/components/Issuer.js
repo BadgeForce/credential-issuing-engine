@@ -17,12 +17,18 @@ class Transaction extends Component {
             id: this.props.id,
             data: this.props.data
         }
+
+        this.statusColors = {
+            COMMITTED: {color: 'green', icon: 'check circle'},
+            INVALID: {color: 'red', icon: 'warning circle'}, 
+            PENDING: {color: 'orange', icon: 'wait'}
+        }
     }
     render() {
         return (
             <Feed.Event>
                 <Feed.Label>
-                    <Icon name='circle' color={this.state.data.status !== 'COMMITTED' ? 'orange': 'green'}/>
+                    <Icon name={this.statusColors[this.state.data.status].icon} color={this.statusColors[this.state.data.status].color}/>
                 </Feed.Label>
                 <Feed.Content>
                     <Feed.Summary>
@@ -33,7 +39,7 @@ class Transaction extends Component {
                         <Feed.Label>
                             <div style={{display: 'flex', flexDirection: 'row', alignItems: 'flex-start'}}>
                                 <Icon name='hourglass half' />
-                                {`Status: ${this.state.data.status}`}  
+                                {`Transaction Status: ${this.state.data.status}`}  
                                 {this.state.data.status === 'PENDING' ? <Loader style={{paddingLeft: 10}} active size='mini' inline/> : null}
                             </div>
                         </Feed.Label>
@@ -63,7 +69,7 @@ class Transactions extends Component {
 class RevokeForm extends Component {
     constructor(props){
         super(props);
-        this.state = {recipient: '', credentialName: '', institutionId: '', formErrors: [], formError: false};
+        this.state = {recipient: '', credentialName: '', institutionId: this.props.demoCred.institutionId, formErrors: [], formError: false};
         this.showFormErrors = this.showFormErrors.bind(this);
         this.isValidForm = this.isValidForm.bind(this);
     }
@@ -71,18 +77,17 @@ class RevokeForm extends Component {
         if(this.isValidForm()){
             try {
                 await this.props.handle(this.state)
-                this.setState({recipient: '', credentialName: '', institutionId: '', formErrors: [], formError: false});
+                this.setState({recipient: '', credentialName: '', formErrors: [], formError: false});
             } catch (error) {
                 console.log(error);
-                this.setState({recipient: '', credentialName: '', institutionId: '', formErrors: [], formError: false});
+                this.setState({recipient: '', credentialName: '', formErrors: [], formError: false});
             }       
         }
     }
     isValidForm() {
         const errors = [
             !base.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
-            this.state.credentialName === '' ? new Error('Credential name is required') : null,
-            this.state.institutionId === '' ? new Error('Institution ID is required') : null,
+            this.state.credentialName === '' ? new Error('Credential name is required') : null
         ].filter(error => {
             return error !== null;
         });
@@ -110,7 +115,7 @@ class RevokeForm extends Component {
             <Form size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
                 <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
                 <Form.Input error={this.state.formError ? true : undefined} value={this.state.credentialName}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, credentialName) => this.setState({credentialName: credentialName.value})} />
-                <Form.Input error={this.state.formError ? true : undefined} value={this.state.institutionId}  mobile={4} tablet={12} placeholder='Institution ID' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />
+                <Form.Input value={this.state.institutionId} disabled mobile={4} tablet={12} placeholder='Institution ID provided for all credentials issued using demo BadgeForce University Issuer' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />
                 <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
                     <Form.Button style={{display: 'flex', alignSelf: 'flex-start'}} color='red' onClick={this.handleRevoke} size='large' content='Revoke' icon='ban' labelPosition='right'/>
                 </Form.Group>
@@ -304,11 +309,11 @@ export class Issuer extends Component {
 
         this.demoCred = {
             school: 'BadgeForce University',
-            issuer: '0x0',
             institutionId: '123456',
         }
 
         this.handleIssue = this.handleIssue.bind(this);
+        this.handleRevoke = this.handleRevoke.bind(this);
         this.handleTransactionsUpdate = this.handleTransactionsUpdate.bind(this);
         this.importAccount = this.importAccount.bind(this);
         this.createAccount = this.createAccount.bind(this);
@@ -317,7 +322,7 @@ export class Issuer extends Component {
         this.badgeforceIssuer = new bjs.Issuer('', this.handleTransactionsUpdate);
         this.panes = [
             { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
-            { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm handle={console.log} />}</Tab.Pane> },
+            { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm demoCred={this.demoCred} handle={this.handleRevoke} />}</Tab.Pane> },
             { menuItem: 'Create Account', render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
         ]
 
@@ -328,6 +333,7 @@ export class Issuer extends Component {
             this.badgeforceIssuer.newAccount(password);
             this.downloadKeyPair(name);
             this.props.notify('Account Created', toast.TYPE.SUCCESS);
+            this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
         } catch (error) {
             console.log(error);
             this.props.notify('Something Went Wrong!', toast.TYPE.ERROR);
@@ -355,6 +361,7 @@ export class Issuer extends Component {
                     }
                 }
                 this.props.notify('Account Imported', toast.TYPE.SUCCESS);
+                this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
                 this.setState(update);
                 document.getElementById('accountUpload').value = '';
             }
@@ -393,6 +400,7 @@ export class Issuer extends Component {
                 recipient,
                 dateEarned: dateEarned.unix().toString(),
                 expiration: expiration.unix().toString(),
+                issuer: this.badgeforceIssuer.account.publicKey,
                 name
             }
 
@@ -416,13 +424,20 @@ export class Issuer extends Component {
     }
 
     async handleRevoke(data) {
-        this.setState({loading: {toggle: true, message: 'loading'}, results: null, visible: false});
+        this.setState({results: null, visible: false, loading: true});
         try {
-            await this.badgeforceIssuer.revoke(data);
-            this.setState({loading: {toggle: false, message: ''}, results: null, visible: false});
+            const watcher = await this.badgeforceIssuer.revoke(data);
+            this.setState(prevState => ({
+                loading: {toggle: false, message: ''},
+                visible: true,
+                toastId: null,
+                transactions: [...prevState.transactions, watcher]
+            }));
         } catch (error) {
             console.log(error);
-            this.setState({loading: {toggle: false, message: ''}, results: null, visible: false});
+            this.props.notify('Something Went Wrong While Revoking!', toast.TYPE.ERROR);
+            this.setState({results: null, visible: false, loading: false});
+
         }
     }
 

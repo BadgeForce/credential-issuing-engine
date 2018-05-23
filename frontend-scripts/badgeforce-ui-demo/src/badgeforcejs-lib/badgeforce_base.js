@@ -82,7 +82,7 @@ export class BadgeForceBase {
             const uri = `${REST_API_IPFS}/${hash}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
-            return await JSON.parse(await response.json());
+            return await response.json();
         } catch (error) {
             throw new Error(error);
         }
@@ -93,7 +93,7 @@ export class BadgeForceBase {
             const uri = `${REST_API_CHAIN}/state?address=${address}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
-            return JSON.parse(await response.json());
+            return await response.json();
         } catch (error) {
             throw new Error(error);
         }

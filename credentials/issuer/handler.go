@@ -89,6 +89,9 @@ func NewCredentialsTP(validator string) *processor.TransactionProcessor {
 	subHandlers[issuer_pb.PayloadAction_ISSUE.String()] = common.SubHandler{
 		Handle: IssueCredentialHandler,
 	}
+	subHandlers[issuer_pb.PayloadAction_REVOKE.String()] = common.SubHandler{
+		Handle: RevokeCredentialHandler,
+	}
 
 	credentialsHandler := common.NewTransactionHandler(FAMILYNAME, FAMILYVERSION, academic.Namespace, subHandlers)
 

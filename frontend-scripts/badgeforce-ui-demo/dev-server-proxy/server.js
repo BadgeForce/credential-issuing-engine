@@ -30,7 +30,7 @@ app.get('/state', (req, res) => {
             } 
             res.status(response.status).json(response.data)
         }
-        doRetry(5, axios, [{method: 'get', url: uri, headers: {'Content-Type': 'application/json'}}], done);
+        doRetry(10, axios, [{method: 'get', url: uri, headers: {'Content-Type': 'application/json'}}], done);
 })
 
 app.get('/ipfs/:hash', (req, res) => {
@@ -44,7 +44,7 @@ app.get('/ipfs/:hash', (req, res) => {
         res.status(response.status).json(response.data)
     }
 
-    doRetry(5, axios, [{method: 'get', url: uri, headers: {'Content-Type': 'application/json'}}], done);
+    doRetry(10, axios, [{method: 'get', url: uri, headers: {'Content-Type': 'application/json'}}], done);
 })
 
 app.get('/batch_statuses', (req, res) => {

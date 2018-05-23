@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Loader, Icon, List, Header, Card, Image, Form, Message, Grid, Transition } from 'semantic-ui-react'
+import { Icon, List, Header, Card, Image, Form, Message, Grid, Transition } from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
 import { toast } from "react-toastify";
 
@@ -103,7 +103,7 @@ export class Verifier extends Component {
     }
     async handleStatusUpdate(data) {
         try {
-            await this.sleep(1);
+            await this.sleep(2);
             const {message, success} = data;
             this.props.updateToast(this.state.toastId, message, success ? toast.TYPE.SUCCESS : toast.TYPE.ERROR);
         } catch (error) {
@@ -238,7 +238,7 @@ export class Verifier extends Component {
                         textAlign='center'
                         subheader='Enter the name of the Academic Credential, the Recipients public key, and the Institution ID of the issuing institution'
                     />
-                    <Form size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+                    <Form loading={this.state.loading} size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.credentialName}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, credentialName) => this.setState({credentialName: credentialName.value})} />
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.institutionId}  mobile={4} tablet={12} placeholder='Institution ID' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />

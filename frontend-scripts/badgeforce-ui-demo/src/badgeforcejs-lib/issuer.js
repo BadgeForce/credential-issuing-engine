@@ -37,11 +37,9 @@ export class Issuer extends AccountManager {
             const hashStateAddress = namespaces.makeAddress(namespaces.ACADEMIC, recipient.concat(credentialName).concat(institutionId));
             const storageHash = await this.getIPFSHash(hashStateAddress);
             const degree = await this.getDegreeCore(storageHash.hash);
-            const response = await revoke(this.signer.sign(Core.encode(degree.coreInfo).finish()));
+            const response = await revoke(this.account.signer.sign(Core.encode(degree.coreInfo).finish()), this.account.signer);
             const batchForWatch = new bjs.Batch(response.link, new bjs.MetaData('REVOKED', `Revoked credential ${credentialName} owned by ${recipient}`, moment().toString()));
-            this.batchStatusWatcher.subscribe(batchForWatch, (status) => {
-                console.log(status);
-            });
+            return this.batchStatusWatcher.subscribe(batchForWatch, this.txWatcherCB);
         } catch (error) {
             throw new Error(error);
         }       
