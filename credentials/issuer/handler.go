@@ -74,10 +74,10 @@ func RevokeCredentialHandler(request *processor_pb2.TpProcessRequest, context *p
 		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Could determine the transaction action from payload"}
 	}
-
+	logger.Info(revoke.GetSignature(), request.GetHeader().GetSignerPublicKey())
 	err = issuance.NewIssuanceState(context).Revoke(revoke.GetSignature(), request.GetHeader().GetSignerPublicKey())
 	if err != nil {
-		return &processor.InternalError{Msg: "Could not update issuance"}
+		return &processor.InvalidTransactionError{Msg: err.Error()}
 	}
 
 	return nil

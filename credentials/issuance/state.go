@@ -29,16 +29,17 @@ func NewIssuanceState(context *processor.Context) *IssuanceState {
 func (s *IssuanceState) GetIssuance(signature, issuer string) (*issuer_pb.Issuance, error) {
 	var issuance issuer_pb.Issuance
 	address := common.MakeAddress(Namespace, signature+issuer)
-	IssuanceState, err := s.Context.GetState([]string{address})
+	state, err := s.Context.GetState([]string{address})
 	if err != nil {
-		return nil, &processor.InternalError{Msg: "Could not GetIssuanceState"}
+		logger.Error(err)
+		return nil, &processor.InvalidTransactionError{Msg: "Could not GetIssuanceState"}
 	}
-	if len(IssuanceState[address]) > 0 {
-		proto.Unmarshal(IssuanceState[address], &issuance)
+	if len(state[address]) > 0 {
+		proto.Unmarshal(state[address], &issuance)
 		return &issuance, nil
 	}
 
-	return nil, &processor.InternalError{Msg: "Issuance Not Found"}
+	return nil, &processor.InvalidTransactionError{Msg: "Issuance Not Found"}
 }
 
 // SaveIssuance ...
@@ -65,14 +66,12 @@ func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) error {
 func (s *IssuanceState) Revoke(signature, issuer string) error {
 	issuance, err := s.GetIssuance(signature, issuer)
 	if err != nil {
-		logger.Error(err)
 		return &processor.InvalidTransactionError{Msg: "Could not get issuance"}
 	}
 
 	issuance.RevokationStatus = true
 	err = s.SaveIssuance(issuance)
 	if err != nil {
-		logger.Errorf("ERROR", err)
 		return &processor.InternalError{Msg: "Could not set Issuance"}
 	}
 

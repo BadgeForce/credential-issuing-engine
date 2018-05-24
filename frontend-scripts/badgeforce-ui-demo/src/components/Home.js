@@ -54,7 +54,7 @@ export class Home extends Component {
     
                 </Sidebar>
                 <Sidebar.Pusher>
-                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center'}}>
+                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', overflowY: 'scroll'}}>
                         {this.state.active === 'verifier' ? <Verifier updateToast={this.updateToast} notify={this.notify} /> : <Issuer updateAccount={(account => this.setState({account}))} updateToast={this.updateToast} notify={this.notify} />}
                     </div>
                 </Sidebar.Pusher>

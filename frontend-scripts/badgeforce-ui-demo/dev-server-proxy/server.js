@@ -9,7 +9,7 @@ const axios = require('axios');
 const retry = require('async/retry');
 
 app.use(cors());
-app.use(bodyParser.raw({type: 'application/octet-stream'}));
+app.use(bodyParser.raw({type: 'application/octet-stream', limit: '50MB'}));
 
 const PORT = 3010;
 

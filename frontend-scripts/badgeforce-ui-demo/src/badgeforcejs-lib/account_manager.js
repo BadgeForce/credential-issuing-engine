@@ -29,14 +29,11 @@ export class AccountManager extends BadgeForceBase {
             const file = files.item(0);
             const reader = new FileReader();
             reader.onload = async (e) => {
-                const contents = e.target.result;
-                this.account = new BadgeForceAccount(JSON.parse(contents).account);
-
                 try {
-                    this.decryptAccount(password);
+                    this.decryptAccount(password, JSON.parse(e.target.result).account);
                     finish(this.account, null);
                 } catch (error) {
-                    finish(null, error);
+                    finish(JSON.parse(e.target.result).account, error);
                 }
             }
             reader.readAsText(file);
@@ -60,17 +57,21 @@ export class AccountManager extends BadgeForceBase {
         }
     }
 
-    decryptAccount(password) {
+    decryptAccount(password, account) {
         try {
+            console.log(account);
+            account = new BadgeForceAccount(account);
             const keys = this.newAccessKeyPair(password);
-            const {status, plaintext} = cryptico.decrypt(this.account.account, keys.priv);
+            const {status, plaintext} = cryptico.decrypt(account.account, keys.priv);
             if(status === 'failure') {
                 throw new Error(this.accountErrors.invalidPassword);
             }
 
             const decrypted = JSON.parse(plaintext);
-            this.account.signer = new CryptoFactory(context).newSigner(new Secp256k1PrivateKey(Buffer.from(decrypted.privateKey, 'hex')));
-            this.account.publicKey = this.account.signer.getPublicKey().asHex();
+            account.signer = new CryptoFactory(context).newSigner(new Secp256k1PrivateKey(Buffer.from(decrypted.privateKey, 'hex')));
+            account.publicKey = account.signer.getPublicKey().asHex();
+
+            this.account = account;
         } catch (error) {
             throw new Error(error.message);
         }

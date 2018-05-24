@@ -39,36 +39,35 @@ export class Verifier extends BadgeForceBase{
 
     async performChecks(degree, issuance) {
         const results = new Results(this.statusCB);
-
         const computedPOI = this.computeIntegrityHash(degree.coreInfo);
         
-        if(computedPOI !== issuance.proofOfIntegrityHash) 
-                results.update(0, {message: this.errMsgs.proofOfIntegrityHash(computedPOI, issuance.proofOfIntegrityHash.hash), success: false});
-        await results.update(0, {message: 'Proof of integrity hash, data not tempered with', success: true});
+        computedPOI !== issuance.proofOfIntegrityHash ?
+            await results.update(0, {message: this.errMsgs.proofOfIntegrityHash(computedPOI, issuance.proofOfIntegrityHash.hash), success: false}): 
+            await results.update(0, {message: 'Proof of integrity hash, data not tempered with', success: true});
         
-        if(degree.coreInfo.recipient !== issuance.recipientPublicKey)
-                await results.update(1, {message: this.errMsgs.recipientMisMatch(degree.coreInfo.recipient, issuance.recipient), success: false});
-        await results.update(1, {message: 'Recipient not tempered with', success: true});
+        degree.coreInfo.recipient !== issuance.recipientPublicKey ?
+            await results.update(1, {message: this.errMsgs.recipientMisMatch(degree.coreInfo.recipient, issuance.recipient), success: false}):
+            await results.update(1, {message: 'Recipient not tempered with', success: true});
 
-        if(degree.coreInfo.issuer !== issuance.issuerPublicKey) 
-                await results.update(2, {message: this.errMsgs.issuerMisMatch(degree.coreInfo.issuer, issuance.issuer), success: false});
-        await results.update(2, {message: 'Issuer not tempered with', success: true});
+        degree.coreInfo.issuer !== issuance.issuerPublicKey ?
+            await results.update(2, {message: this.errMsgs.issuerMisMatch(degree.coreInfo.issuer, issuance.issuer), success: false}):
+            await results.update(2, {message: 'Issuer not tempered with', success: true});
 
-        if(degree.signature !== issuance.signature) 
-                await results.update(3, {message: this.errMsgs.signatureMisMatch(degree.coreInfo.signature, issuance.signature), success: false});
-        await results.update(3, {message: 'Signature not tempered with', success: true});
+        degree.signature !== issuance.signature ?
+            await results.update(3, {message: this.errMsgs.signatureMisMatch(degree.coreInfo.signature, issuance.signature), success: false}):
+            await results.update(3, {message: 'Signature not tempered with', success: true});
 
-        if(moment().isAfter(moment(degree.coreInfo.expiration))) 
-                await results.update(4, {message: this.errMsgs.expired(new Date().setSeconds(degree.coreInfo.expiration.seconds).toString()), success: false});
-        await results.update(4, {message: 'Credential not expired', success: true});
+        moment().isAfter(moment(degree.coreInfo.expiration)) ?
+            await results.update(4, {message: this.errMsgs.expired(new Date().setSeconds(degree.coreInfo.expiration.seconds).toString()), success: false}):
+            await results.update(4, {message: 'Credential not expired', success: true});
 
-        if(issuance.revokationStatus) 
-                await results.update(5, {message: this.errMsgs.revoked(), success: false});
-        await results.update(5, {message: 'Credential not revoked', success: true});
+        issuance.revokationStatus ?
+            await results.update(5, {message: this.errMsgs.revoked(), success: false}):
+            await results.update(5, {message: 'Credential not revoked', success: true});
 
-        if (!this.verifySignature(degree))
-                await results.update(6, {message: this.errMsgs.invalidSignature(degree.signature), success: false}); 
-        await results.update(6, {message: 'Signature is valid', success: true});
+        !this.verifySignature(degree) ?
+            await results.update(6, {message: this.errMsgs.invalidSignature(degree.signature), success: false}):
+            await results.update(6, {message: 'Signature is valid', success: true});
         
         return {
             results: results.results,

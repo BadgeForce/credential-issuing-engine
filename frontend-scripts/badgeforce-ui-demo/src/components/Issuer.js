@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import DatePicker from 'react-datepicker';
-import { Loader, Icon, Feed, Header, Form, Dimmer, Grid, Confirm, Input, Tab, Message} from 'semantic-ui-react'
+import { Loader, Icon, Feed, Header, Form, Grid, Confirm, Input, Tab, Message} from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
 import { toast } from "react-toastify";
-
+import { Credential } from './Verifier';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -139,19 +139,15 @@ class NewAccountForm extends Component {
         }
     }
     isValidForm = () => {
-        const errors = [
+        this.setState({formErrors: []})
+        let formErrors = this.state.formErrors;
+        return [
             this.state.password === '' ? new Error('Password cannot be empty') : null
-        ].filter(error => {
-            return error !== null;
-        });
-
-        if(errors.length > 0) {
-            this.setState({formErrors: errors, formError: true});
-            return false
-        }
-
-        this.setState({formErrors: errors, formError: false});
-        return true;
+        ].filter(error => error !== null)
+        .map(error => {
+            if(error) this.setState({formErrors: [...formErrors, error], formError: true});
+            return error;
+        }).length === 0;
     }
     showFormErrors = () => {
         return (
@@ -191,40 +187,51 @@ class NewAccountForm extends Component {
 class IssueForm extends Component {
     constructor(props){
         super(props);
-        this.state = {recipient: '', dateEarned: null, name: '', expiration: null, formErrors: [], formError: false};
-        console.log(this.props.warn);
+        this.state = {recipient: '', dateEarned: null, name: '', image: null, expiration: null, formErrors: [], formError: false, loading: false};
         this.showFormErrors = this.showFormErrors.bind(this);
         this.showNoAccountWarning = this.showNoAccountWarning.bind(this);
         this.isValidForm = this.isValidForm.bind(this);
     }
-    handleIssue = async () => {
-        if(this.isValidForm()) {
-            try {
-                await this.props.handle(this.state);
-                this.setState({recipient: '', dateEarned: null, name: '', expiration: null, formErrors: [], formError: false});
-            } catch (error) {
-                console.log(error);
-                this.setState({recipient: '', dateEarned: null, name: '', expiration: null, formErrors: [], formError: false});
-            }
+    uploadImage = (e) => {
+        this.setState({loading: true});
+        try {
+            const files = document.getElementById('credentialImageUpload').files;
+            this.props.readImageFile(files, results => {
+                console.log(results);
+                this.setState({loading: false, image: results});
+                this.props.notify('Image uploaded', toast.TYPE.SUCCESS);
+                document.getElementById('credentialImageUpload').value = '';
+            });
+        } catch (error) {
+            console.log(error);
+            this.props.notify('Could not upload image, try again or issue without it', toast.TYPE.ERROR);
         }
     }
+    handleIssue = async () => {
+        if(this.isValidForm()) {
+            console.log(this.state);
+            await this.props.handle(this.state);
+            this.setState({recipient: '', dateEarned: null, name: '', expiration: null, image: null, formErrors: [], formError: false});
+        }
+    }
+
+    getPreview = () => {
+        return <Credential full={false} data={{...this.props.demo, issuer: this.props.issuer, ...this.state}} />
+    }
+
     isValidForm() {
-        const errors = [
+        this.setState({formErrors: []})
+        let formErrors = [];
+        return [
             !base.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
             this.state.name === '' ? new Error('Credential name is required') : null,
             this.state.dateEarned === null ? new Error('Date earned is required') : null,
             this.state.expiration && moment().isAfter(this.state.expiration) ? new Error('Cannot issue an expired credential') : null
-        ].filter(error => {
-            return error !== null;
-        });
-
-        if(errors.length > 0) {
-            this.setState({formErrors: errors, formError: true});
-            return false
-        }
-
-        this.setState({formErrors: errors, formError: false});
-        return true;
+        ].filter(error => error !== null)
+        .map(error => {
+            if(error) this.setState({formErrors: [...formErrors, error], formError: true});
+            return error;
+        }).length === 0;
     }
 
     showNoAccountWarning() {
@@ -247,7 +254,7 @@ class IssueForm extends Component {
     }
     render(){
         return (
-            <Form size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+            <Form loading={this.state.loading} size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
                 <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
                 <Form.Input error={this.state.formError ? true : undefined} value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />
                 <Form.Group widths='equal'>
@@ -261,10 +268,12 @@ class IssueForm extends Component {
                     </Form.Field>
                 </Form.Group>
                 <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                    <Form.Button disabled={this.props.warn} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleIssue} size='large' content='Issue Credential' icon='send' labelPosition='right'/>
+                    <Form.Button disabled={this.props.warn || this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleIssue} size='large' content='Issue Credential' icon='send' labelPosition='right'/>
+                    <Form.Button disabled={this.props.warn || this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' size='large' content='Upload Image' icon='upload' labelPosition='right' onClick={() => document.getElementById('credentialImageUpload').click()} />
                 </Form.Group>
+                <input type="file" id='credentialImageUpload' onChange={this.uploadImage} style={{display: 'none'}} />  
                 {this.state.formErrors.length > 0 ? this.showFormErrors() : null}
-                {this.props.warn ? this.showNoAccountWarning() : null}
+                {this.props.warn ? this.showNoAccountWarning() : this.getPreview()}
             </Form>
         )
     }
@@ -301,27 +310,28 @@ export class Issuer extends Component {
             results: null,
             loading: {toggle: false, message: ''},
             visible: false,
-            confirmPassword: false,
+            confirmPassword: {show: false, account: null, loading: false},
             error: null,
             transactions: [],
             toastId: null
         }
 
-        this.demoCred = {
-            school: 'BadgeForce University',
-            institutionId: '123456',
-        }
+        
 
         this.handleIssue = this.handleIssue.bind(this);
         this.handleRevoke = this.handleRevoke.bind(this);
         this.handleTransactionsUpdate = this.handleTransactionsUpdate.bind(this);
         this.importAccount = this.importAccount.bind(this);
+        this.importAccountDone = this.importAccountDone.bind(this);
         this.createAccount = this.createAccount.bind(this);
         this.downloadKeyPair = this.downloadKeyPair.bind(this);
-
         this.badgeforceIssuer = new bjs.Issuer('', this.handleTransactionsUpdate);
+        this.demoCred = {
+            school: 'BadgeForce University',
+            institutionId: '123456'
+        }
         this.panes = [
-            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
+            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm issuer={this.badgeforceIssuer.account ? this.badgeforceIssuer.account.publicKey: null} notify={this.props.notify} demo={this.demoCred} readImageFile={this.badgeforceIssuer.readImageFile} warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
             { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm demoCred={this.demoCred} handle={this.handleRevoke} />}</Tab.Pane> },
             { menuItem: 'Create Account', render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
         ]
@@ -347,25 +357,30 @@ export class Issuer extends Component {
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
+    async importAccountDone (account, error) {
+        document.getElementById('accountUpload').value = '';
+        let stateUpdate = {loading: {toggle: false, message: ''}};
+        const handleErr = (error) => {
+            if(error) {
+                let invalidPassword = this.badgeforceIssuer.accountErrors.invalidPassword;
+                const notifyMsg = (error && error.message === invalidPassword) ? 'Account password invalid, try re-enter password' : 'Something went wrong, try again'
+                this.props.notify(notifyMsg, toast.TYPE.ERROR);
+                this.setState({...stateUpdate, confirmPassword: {show: true, account}});
+            }
+            return error;
+        }
+        
+        if(!handleErr(error)) {
+            this.props.notify('Account Imported', toast.TYPE.SUCCESS);
+            this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
+            this.setState(stateUpdate);
+        }   
+    }
     async importAccount(e, password) {
         this.setState({results: null, visible: false, loading: true});
         try {
             const files = document.getElementById('accountUpload').files;
-            const finishCB = async (results, error) => {
-                const update = {loading: {toggle: false, message: ''}};
-                if(error) {
-                    if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
-                        update['confirmPassword'] = true;
-                    } else {
-                        this.props.updateToast(this.state.toastId, 'Something went wrong', toast.TYPE.ERROR);
-                    }
-                }
-                this.props.notify('Account Imported', toast.TYPE.SUCCESS);
-                this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
-                this.setState(update);
-                document.getElementById('accountUpload').value = '';
-            }
-            this.badgeforceIssuer.importAccount(files, password, finishCB);
+            this.badgeforceIssuer.importAccount(files, password, this.importAccountDone);
         } catch (error) {
             console.log(error);
             await this.sleep(3);
@@ -392,16 +407,18 @@ export class Issuer extends Component {
     }
 
     async handleIssue(data) {
+        console.log(data);
         this.setState({results: null, visible: false, loading: true});
         try {
-            const {recipient, dateEarned, name, expiration} = data;
+            const {recipient, dateEarned, name, expiration, image} = data;
             const coreData = {
                 ...this.demoCred,
                 recipient,
                 dateEarned: dateEarned.unix().toString(),
                 expiration: expiration.unix().toString(),
                 issuer: this.badgeforceIssuer.account.publicKey,
-                name
+                name,
+                image
             }
 
             const watcher = await this.badgeforceIssuer.issueAcademic(coreData);
@@ -437,27 +454,29 @@ export class Issuer extends Component {
             console.log(error);
             this.props.notify('Something Went Wrong While Revoking!', toast.TYPE.ERROR);
             this.setState({results: null, visible: false, loading: false});
-
         }
     }
-
+    
     render() {
         return (
             <Grid style={{paddingTop: 100, height: '100vh', justifyContent: 'center'}} computer='sixteen' mobile={4} tablet={12} container columns={1} stackable>
-                <PasswordConfirm finish={(password) => {
-                        this.setState({confirmPassword: false});
+                <PasswordConfirm loading={this.state.confirmPassword.loading} finish={(password) => {
+                        this.setState({confirmPassword: {loading: false}});
                         try {
-                            this.badgeforceIssuer.decryptAccount(password);
+                            this.badgeforceIssuer.decryptAccount(password, this.state.confirmPassword.account);
+                            this.setState({confirmPassword: {show: false, account: null, loading: false}});
                         } catch (error) {
+                            this.setState({confirmPassword: {show: false, account: null, loading: false}});
                             if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
-                                this.props.updateToast(this.state.toastId, 'Password still invalid, try importing again', toast.TYPE.ERROR);
+                                this.props.notify('Account Password still Invalid, try re-uploading', toast.TYPE.ERROR);
                             } else {
-                                this.props.updateToast(this.state.toastId, 'Something went wrong', toast.TYPE.ERROR);
+                                this.props.notify('Something went wrong', toast.TYPE.ERROR);
                             }
                         }
                     }}
-                    open={this.state.confirmPassword} 
-                    cancel={() => this.setState({confirmPassword: false})}
+                    open={this.state.confirmPassword.show} 
+                    cancel={() => this.setState({confirmPassword: {show: false, account: null, loading: false}})
+                }
                 />
                 <Grid.Column computer='sixteen' mobile={4} tablet={12}>
                     <Header as='h1' textAlign='center'>   

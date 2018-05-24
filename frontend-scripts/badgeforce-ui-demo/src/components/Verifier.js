@@ -26,25 +26,48 @@ export class Credential extends Component {
         super(props);
         this.ipfsURI = `https://ipfs.io/ipfs/${this.props.ipfs}`
     }
-    render() {
+    showFullContent = () => {
+        const imageSrc = this.props.data.image || 'https://react.semantic-ui.com/assets/images/wireframe/white-image.png';
         return (
-            <Card>
-                <Image floated='right' size='mini' src='https://react.semantic-ui.com/assets/images/avatar/large/daniel.jpg' />
+            <Card.Content>
                 <Card.Content style={{wordWrap: 'break-word'}}>
+                    <Image floated='left' size='small' verticalAlign='middle' src={imageSrc} />
                     <Card.Header>{this.props.data.name}</Card.Header>
-                    <Card.Meta>Issued On {moment.unix(this.props.data.dateEarned).toString()}</Card.Meta>
+                    <Card.Meta>Date Earned {moment.unix(this.props.data.dateEarned).toString()}</Card.Meta>
                     <Card.Description>
                         School: {this.props.data.school}<br/>
                         Institution ID: {this.props.data.institutionId}<br/>
                         Issuer: {this.props.data.issuer}<br/>
                         Recipient: {this.props.data.recipient}<br/>
-                        <a target='blank' href={this.ipfsURI}>IPFS Hash {this.props.ipfs}</a>
+                        <a target='blank' href={this.ipfsURI}>IPFS Hash {this.props.ipfs}</a><br/>
+                        Expires {moment.unix(this.props.data.expiration).toString()}<br/>
+                        Signature {this.props.signature}
                     </Card.Description>
                 </Card.Content>
-                <Card.Content style={{wordWrap: 'break-word'}} extra>
-                    Expires {moment.unix(this.props.data.expiration).toString()}<br/>
-                    Signature {this.props.signature}
-                </Card.Content>
+            </Card.Content>
+        );
+    }
+    showPreview = () => {
+        const imageSrc = this.props.data.image || 'https://react.semantic-ui.com/assets/images/wireframe/white-image.png';
+        return (
+            <Card.Content style={{wordWrap: 'break-word'}}>
+                <Image floated='right' size='small' verticalAlign='middle' src={imageSrc} />
+                <Card.Header>Preview {this.props.data.name ? `- ${this.props.data.name}`: null}</Card.Header>
+                <Card.Meta>{this.props.data.dateEarned ? `Date Earned: ${moment(this.props.data.dateEarned).toString()}` : null}</Card.Meta>
+                <div style={{display: 'flex', flexDirection: 'column'}}>
+                    <p>School: {this.props.data.school}<br/></p>
+                    <p>Institution ID: {this.props.data.institutionId}<br/></p>
+                    <p>Issuer: {this.props.data.issuer}</p><br/>
+                    <p>{this.props.data.recipient ? `Recipient: ${this.props.data.recipient}` : null}</p><br/>
+                    <p>{this.props.data.expiration ? `Expires: ${moment(this.props.data.expiration).toString()}` : null}<br/></p>
+                </div>
+            </Card.Content>
+        );
+    }
+    render() {
+        return (
+            <Card raised style={{width: '100%'}}>
+                {this.props.full ? this.showFullContent() : this.showPreview()} 
             </Card>
         )
     }
@@ -208,7 +231,8 @@ export class Verifier extends Component {
                         textAlign='center'
                         subheader='Credential data is stored off chain in IPFS, Issuance is kept on chain immutable and referenced for verification'
                     />
-                    <Credential 
+                    <Credential
+                        full={true}
                         data={this.state.results.degree.coreInfo} 
                         signature={this.state.results.degree.signature} 
                         ipfs={this.state.results.degree.storageHash.hash}/>

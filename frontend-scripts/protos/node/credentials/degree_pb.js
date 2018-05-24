@@ -439,7 +439,8 @@ proto.issuer_pb.Core.toObject = function(includeInstance, msg) {
     recipient: jspb.Message.getFieldWithDefault(msg, 4, ""),
     dateEarned: jspb.Message.getFieldWithDefault(msg, 5, ""),
     institutionid: jspb.Message.getFieldWithDefault(msg, 6, ""),
-    expiration: jspb.Message.getFieldWithDefault(msg, 7, "")
+    expiration: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    image: jspb.Message.getFieldWithDefault(msg, 8, "")
   };
 
   if (includeInstance) {
@@ -503,6 +504,10 @@ proto.issuer_pb.Core.deserializeBinaryFromReader = function(msg, reader) {
     case 7:
       var value = /** @type {string} */ (reader.readString());
       msg.setExpiration(value);
+      break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setImage(value);
       break;
     default:
       reader.skipField();
@@ -579,6 +584,13 @@ proto.issuer_pb.Core.serializeBinaryToWriter = function(message, writer) {
   if (f.length > 0) {
     writer.writeString(
       7,
+      f
+    );
+  }
+  f = message.getImage();
+  if (f.length > 0) {
+    writer.writeString(
+      8,
       f
     );
   }
@@ -687,6 +699,21 @@ proto.issuer_pb.Core.prototype.getExpiration = function() {
 /** @param {string} value */
 proto.issuer_pb.Core.prototype.setExpiration = function(value) {
   jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional string image = 8;
+ * @return {string}
+ */
+proto.issuer_pb.Core.prototype.getImage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/** @param {string} value */
+proto.issuer_pb.Core.prototype.setImage = function(value) {
+  jspb.Message.setProto3StringField(this, 8, value);
 };
 
 

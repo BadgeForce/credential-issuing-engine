@@ -1357,6 +1357,7 @@ $root.issuer_pb = (function() {
          * @property {string|null} [dateEarned] Core dateEarned
          * @property {string|null} [institutionId] Core institutionId
          * @property {string|null} [expiration] Core expiration
+         * @property {string|null} [image] Core image
          */
 
         /**
@@ -1431,6 +1432,14 @@ $root.issuer_pb = (function() {
         Core.prototype.expiration = "";
 
         /**
+         * Core image.
+         * @member {string} image
+         * @memberof issuer_pb.Core
+         * @instance
+         */
+        Core.prototype.image = "";
+
+        /**
          * Creates a new Core instance using the specified properties.
          * @function create
          * @memberof issuer_pb.Core
@@ -1468,6 +1477,8 @@ $root.issuer_pb = (function() {
                 writer.uint32(/* id 6, wireType 2 =*/50).string(message.institutionId);
             if (message.expiration != null && message.hasOwnProperty("expiration"))
                 writer.uint32(/* id 7, wireType 2 =*/58).string(message.expiration);
+            if (message.image != null && message.hasOwnProperty("image"))
+                writer.uint32(/* id 8, wireType 2 =*/66).string(message.image);
             return writer;
         };
 
@@ -1522,6 +1533,9 @@ $root.issuer_pb = (function() {
                     break;
                 case 7:
                     message.expiration = reader.string();
+                    break;
+                case 8:
+                    message.image = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1579,6 +1593,9 @@ $root.issuer_pb = (function() {
             if (message.expiration != null && message.hasOwnProperty("expiration"))
                 if (!$util.isString(message.expiration))
                     return "expiration: string expected";
+            if (message.image != null && message.hasOwnProperty("image"))
+                if (!$util.isString(message.image))
+                    return "image: string expected";
             return null;
         };
 
@@ -1608,6 +1625,8 @@ $root.issuer_pb = (function() {
                 message.institutionId = String(object.institutionId);
             if (object.expiration != null)
                 message.expiration = String(object.expiration);
+            if (object.image != null)
+                message.image = String(object.image);
             return message;
         };
 
@@ -1632,6 +1651,7 @@ $root.issuer_pb = (function() {
                 object.dateEarned = "";
                 object.institutionId = "";
                 object.expiration = "";
+                object.image = "";
             }
             if (message.name != null && message.hasOwnProperty("name"))
                 object.name = message.name;
@@ -1647,6 +1667,8 @@ $root.issuer_pb = (function() {
                 object.institutionId = message.institutionId;
             if (message.expiration != null && message.hasOwnProperty("expiration"))
                 object.expiration = message.expiration;
+            if (message.image != null && message.hasOwnProperty("image"))
+                object.image = message.image;
             return object;
         };
 

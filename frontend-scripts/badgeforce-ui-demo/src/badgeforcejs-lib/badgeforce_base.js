@@ -30,6 +30,18 @@ export class Results {
 
 export class BadgeForceBase {
 
+    readImageFile(files, finish) {
+        try {
+            const file = files.item(0);
+            const reader = new FileReader();
+            reader.onloadend = () => finish(reader.result);
+            reader.readAsDataURL(file);
+        }
+        catch (error) {
+            throw new Error(error);
+        }
+    }
+
     isValidPublicKey(key) {
         return secp256k1.publicKeyVerify(Buffer.from(key, 'hex'));
     }

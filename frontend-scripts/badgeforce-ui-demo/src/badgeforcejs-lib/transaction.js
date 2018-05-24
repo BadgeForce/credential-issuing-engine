@@ -78,8 +78,8 @@ const submitBatch = async (batch) => {
 export const issue = async (coreData, signer) => {    
     try {
         const core = Core.create(coreData);
-        console.log(core);
         const academicCred = AcademicCredential.create({coreInfo: core, signature: signer.sign(Core.encode(core).finish())});
+        console.log("SIGNATURE ISSUE: ", academicCred.signature)
         // we are going to wrap this data in google.protobuf.any, to allow for arbitrary data passing in our 1 transaction handler many subhandler scheme 
         const issueAny = google.protobuf.Any.create({
             type_url: 'github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb.AcademicCredential', value: AcademicCredential.encode(academicCred).finish()
@@ -102,7 +102,9 @@ export const issue = async (coreData, signer) => {
 
 export const revoke = async (signature, signer) => {    
     try {
-        const revokation = Revoke.create(signature);
+        const revokation = Revoke.create({signature});
+        console.log("SIGNATURE REVOKE: ", revokation)
+
         // we are going to wrap this data in google.protobuf.any, to allow for arbitrary data passing in our 1 transaction handler many subhandler scheme 
         const revokationAny = google.protobuf.Any.create({
             type_url: 'github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb.Revoke', value: Revoke.encode(revokation).finish()
@@ -112,8 +114,6 @@ export const revoke = async (signature, signer) => {
         const namespaceAddresses = [
             namespaces.makeAddress(namespaces.ISSUANCE, signature.concat(signer.getPublicKey().asHex())),
         ];
-
-        console.log('namespaceAddresses', namespaceAddresses)
 
         const inputs = [...namespaceAddresses], outputs = [...namespaceAddresses];
         return await submitBatch(newSingleBatch(inputs, outputs, signer, [], payload));
