@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "dependencies": {
+    "animate.css": "^3.6.1",
     "async": "^2.6.0",
     "autoprefixer": "7.1.6",
     "axios": "^0.18.0",
@@ -56,6 +57,7 @@
     "promise": "8.0.1",
     "raf": "3.4.0",
     "react": "^16.3.2",
+    "react-animations": "^1.0.0",
     "react-datepicker": "^1.4.1",
     "react-dev-utils": "^5.0.1",
     "react-dom": "^16.3.2",

@@ -88,9 +88,16 @@ export class Verifier extends BadgeForceBase{
             const reader = new FileReader();
             reader.onload = (e) => {
                 const contents = e.target.result;
-                const parsed = JSON.parse(contents);
-                const {recipient, name, institutionId} = this.decodeDegree(Buffer.from(parsed.data, 'base64')).coreInfo;
-                callback({recipient, credentialName: name, institutionId});
+                let invalidFileType = null,
+                    degree = null;                   
+                try {
+                    const parsed = JSON.parse(contents);
+                    degree = this.decodeDegree(Buffer.from(parsed.data, 'base64')).coreInfo;
+                } catch (error) {
+                    invalidFileType = new Error('Invalid file type');
+                }
+                
+                callback(invalidFileType, degree);
             }
 
             reader.readAsText(file);

@@ -29,11 +29,17 @@ export class AccountManager extends BadgeForceBase {
             const file = files.item(0);
             const reader = new FileReader();
             reader.onload = async (e) => {
+                let account;
                 try {
-                    this.decryptAccount(password, JSON.parse(e.target.result).account);
+                    try {
+                        account = JSON.parse(e.target.result).account;
+                    } catch (error) {
+                        throw new Error('Invalid file type');
+                    }
+                    this.decryptAccount(password, account);
                     finish(this.account, null);
-                } catch (error) {
-                    finish(JSON.parse(e.target.result).account, error);
+                } catch (error) {                    
+                    finish(account, error);
                 }
             }
             reader.readAsText(file);

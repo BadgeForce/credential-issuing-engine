@@ -1,10 +1,30 @@
 import React, { Component } from 'react';
-import { Icon, List, Header, Card, Image, Form, Message, Grid, Transition } from 'semantic-ui-react'
+import ReactDOM from 'react-dom';
+import { Icon, List, Header, Card, Image, Form, Message, Grid, Transition, Button } from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
 import { toast } from "react-toastify";
 
+import 'animate.css/animate.min.css';
+
 const moment = require('moment');
 
+export const animateElem = async (element, animation, times) => {
+    const node = ReactDOM.findDOMNode(element);
+    const classes = ['animated', 'infinite', animation];
+    classes.filter(c => node.classList.contains(c))
+        .forEach(c => node.classList.add(c));
+    classes.forEach(c => node.classList.toggle(c));
+    await sleep(3)
+    classes.forEach(c => node.classList.remove(c));
+}
+
+export const sleep = async (duration) => {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            resolve();
+        }, duration*1000)
+    });
+}
 export class Issuance extends Component {
     render() {
         return (
@@ -98,7 +118,7 @@ export class Verifier extends Component {
         super(props);
         this.state = {
             recipient: '', 
-            credentialName: '', 
+            name: '', 
             institutionId: '',
             error: null,
             results: null,
@@ -114,19 +134,15 @@ export class Verifier extends Component {
         this.uploadJSON = this.uploadJSON.bind(this);
         this.handleStatusUpdate = this.handleStatusUpdate.bind(this);
         this.showResults = this.showResults.bind(this);
+        this.verifyButtonRef = React.createRef();
+
         this.badgeforceVerifier = new bjs.BadgeforceVerifier('', this.handleStatusUpdate);
+
     }
 
-    async sleep(duration) {
-        return new Promise(resolve => {
-			setTimeout(() => {
-			    resolve();
-            }, duration*1000)
-		});
-    }
     async handleStatusUpdate(data) {
         try {
-            await this.sleep(2);
+            await sleep(2);
             const {message, success} = data;
             this.props.updateToast(this.state.toastId, message, success ? toast.TYPE.SUCCESS : toast.TYPE.ERROR);
         } catch (error) {
@@ -134,29 +150,40 @@ export class Verifier extends Component {
         }    
     }
     async uploadJSON(e) {
-        this.setState({loading: {toggle: true, message: 'Parsing BFAC File'}, results: null, visible: false});
+        this.setState({loading: true, results: null, visible: false});
         try {
             const files = document.getElementById('jsonUpload').files;
-            this.badgeforceVerifier.readFile(files, async results => {
-                await this.sleep(3);
-                const {recipient, credentialName, institutionId} = results;
+            const done = async (error, results) => {
+                document.getElementById('jsonUpload').value = '';
+                await sleep(2);
+                
+                if(error) {
+                    this.props.notify(error.message, toast.TYPE.ERROR);
+                    this.setState({loading: false, results: null, visible: false});
+                    return
+                }
+
+                const {recipient, name, institutionId} = results;
                 this.setState({
                     recipient, 
-                    credentialName,
+                    name,
                     institutionId,
-                    loading: {toggle: false, message: ''},
+                    loading: false,
                 });
-                document.getElementById('jsonUpload').value = '';
-            });
+                this.props.notify('Ready to verify', toast.TYPE.SUCCESS);
+                await animateElem(this.verifyButtonRef.current, 3, 'shake');
+            }
+
+            this.badgeforceVerifier.readFile(files, done);
         } catch (error) {
             console.log(error);
-            await this.sleep(3);
+            await sleep(3);
             this.setState({
                 recipient: '', 
-                credentialName: '', 
+                name: '', 
                 institutionId: '',
                 results: null,
-                loading: {toggle: false, message: ''},
+                loading: false,
                 error
             });
         }
@@ -164,7 +191,7 @@ export class Verifier extends Component {
     isValidForm() {
         const errors = [
             !this.badgeforceVerifier.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
-            this.state.credentialName === '' ? new Error('Credential name is required') : null,
+            this.state.name === '' ? new Error('Credential name is required') : null,
             this.state.institutionId === '' ? new Error('Institution ID is required') : null,
         ].filter(error => {
             return error !== null;
@@ -193,12 +220,12 @@ export class Verifier extends Component {
             const toastId = this.props.notify('Verifying', toast.TYPE.INFO);
             this.setState({results: null, visible: false, toastId, loading: true});
             try {
-                const results = await this.badgeforceVerifier.verifyAcademic(this.state.recipient, this.state.credentialName, this.state.institutionId);
+                const results = await this.badgeforceVerifier.verifyAcademic(this.state.recipient, this.state.name, this.state.institutionId);
                 this.props.updateToast(this.state.toastId, 'Done Verifying', toast.TYPE.INFO);
                 this.setState({
                     results, 
                     recipient: '', 
-                    credentialName: '', 
+                    name: '', 
                     institutionId: '',
                     toastId: null,
                     formError: false,
@@ -207,10 +234,11 @@ export class Verifier extends Component {
                     visible: true,
                 });
             } catch (error) {
-                this.props.updateToast(this.state.toastId, 'Uh Oh, Somethings Wrong', toast.TYPE.ERROR);
+                console.log(error);
+                this.props.updateToast(this.state.toastId, error.message, toast.TYPE.ERROR);
                 this.setState({
                     recipient: '', 
-                    credentialName: '', 
+                    name: '', 
                     institutionId: '',
                     results: null,
                     toastId: null,
@@ -264,10 +292,12 @@ export class Verifier extends Component {
                     />
                     <Form loading={this.state.loading} size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
-                        <Form.Input error={this.state.formError ? true : undefined} value={this.state.credentialName}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, credentialName) => this.setState({credentialName: credentialName.value})} />
+                        <Form.Input error={this.state.formError ? true : undefined} value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.institutionId}  mobile={4} tablet={12} placeholder='Institution ID' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />
                         <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                            <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleVerify} size='large' content='verify' icon='check' labelPosition='right'/>
+                            <Form.Field>
+                                <Button ref={this.verifyButtonRef} disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleVerify} size='large' content='verify' icon='check' labelPosition='right'/>
+                            </Form.Field>
                             <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' size='large' content='Verify From BFAC File Upload' icon='upload' labelPosition='right' onClick={() => document.getElementById('jsonUpload').click()} />
                         </Form.Group>
                         {this.state.formErrors.length > 0 ? this.showFormErrors() : null}

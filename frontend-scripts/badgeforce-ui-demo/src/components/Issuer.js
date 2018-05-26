@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
 import DatePicker from 'react-datepicker';
-import { Loader, Icon, Feed, Header, Form, Grid, Confirm, Input, Tab, Message} from 'semantic-ui-react'
+import { Loader, Icon, Feed, Header, Form, Grid, Confirm, Input, Tab, Message, Menu, Button } from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
 import { toast } from "react-toastify";
-import { Credential } from './Verifier';
+import { Credential, animateElem, sleep } from './Verifier';
 import 'react-datepicker/dist/react-datepicker.css';
-import 'react-toastify/dist/ReactToastify.css';
+import 'animate.css/animate.min.css';
 
 const moment = require('moment');
 
@@ -238,7 +238,7 @@ class IssueForm extends Component {
         return (
             <Message 
                 header='No account detected'
-                content='Could not detect an account, please import or create one using the Create Account tab'
+                content='Could not detect an account, please import or create one using the Accounts tab'
             />
         )
     }
@@ -330,13 +330,18 @@ export class Issuer extends Component {
             school: 'BadgeForce University',
             institutionId: '123456'
         }
+
+        this.accountsTabRef = React.createRef();
         this.panes = [
             { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm issuer={this.badgeforceIssuer.account ? this.badgeforceIssuer.account.publicKey: null} notify={this.props.notify} demo={this.demoCred} readImageFile={this.badgeforceIssuer.readImageFile} warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
             { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm demoCred={this.demoCred} handle={this.handleRevoke} />}</Tab.Pane> },
-            { menuItem: 'Create Account', render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
+            { menuItem: <Menu.Item style={{width: '100%'}} ref={this.accountsTabRef} as={Button} key='accounts'>Accounts</Menu.Item>, render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
         ]
 
        
+    }
+    componentDidMount() {
+        if(this.badgeforceIssuer.account === null) animateElem(this.accountsTabRef.current, 'rubberBand', 5)
     }
     createAccount(password, name) {
         try {
@@ -463,8 +468,10 @@ export class Issuer extends Component {
                 <PasswordConfirm loading={this.state.confirmPassword.loading} finish={(password) => {
                         this.setState({confirmPassword: {loading: false}});
                         try {
-                            this.badgeforceIssuer.decryptAccount(password, this.state.confirmPassword.account);
+                            this.badgeforceIssuer.decryptAccount(password.value, this.state.confirmPassword.account);
+                            this.props.notify('Account imported', toast.TYPE.SUCCESS);
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
+                            this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
                         } catch (error) {
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
                             if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {

@@ -3,6 +3,7 @@ import { Sidebar, Menu, Icon } from 'semantic-ui-react';
 import { Verifier } from './Verifier';
 import { Issuer } from './Issuer';
 import { ToastContainer, toast } from "react-toastify";
+import 'react-toastify/dist/ReactToastify.css';
 
 export class Home extends Component {  
     constructor(props) {

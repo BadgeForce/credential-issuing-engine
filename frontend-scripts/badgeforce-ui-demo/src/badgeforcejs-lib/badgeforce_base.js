@@ -33,6 +33,7 @@ export class BadgeForceBase {
     readImageFile(files, finish) {
         try {
             const file = files.item(0);
+            if(Math.floor(file.size/1024/1024) > 50) throw new Error(`File Size ${Math.floor(file.size/1024/1024)}MB exceeds limit 50MB`)
             const reader = new FileReader();
             reader.onloadend = () => finish(reader.result);
             reader.readAsDataURL(file);
