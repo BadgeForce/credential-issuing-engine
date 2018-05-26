@@ -4,10 +4,16 @@ ifndef $(GOPATH)
 endif
 
 network_up:
-	docker-compose -f sawtooth-default.yaml up --force-recreate 
+	docker-compose -f badgeforce-network.yaml up --force-recreate 
 
 network_down:
-	docker-compose -f sawtooth-default.yaml down 
+	docker-compose -f badgeforce-network.yaml down 
+
+network_peer: 
+	docker-compose -f ./peer-node/badgeforce-network-peer.yaml up --force-recreate
+
+network_peer_remove:
+	docker-compose -f ./peer-node/badgeforce-network-peer.yaml down
 
 compile_protobufers: protobuf_accounts protobuf_credentials
 
