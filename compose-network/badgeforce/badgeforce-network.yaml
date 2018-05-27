@@ -26,6 +26,7 @@ services:
   ipfs-node:
     image: jbenet/go-ipfs:latest
     container_name: ipfs-node
+    restart: always
     expose:
       - 8080
       - 4001
@@ -62,6 +63,7 @@ services:
 
   validator:
     image: hyperledger/sawtooth-validator
+    restart: always
     container_name: sawtooth-validator-default
     expose:
       - 4004
