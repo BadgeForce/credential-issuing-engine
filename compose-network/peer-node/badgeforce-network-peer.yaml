@@ -21,6 +21,7 @@ services:
     depends_on:
       - peer-validator
     entrypoint: settings-tp -vv -C tcp://peer-validator:4005
+    stop_signal: SIGKILL
 
   peer-validator:
     image: sawtooth-validator:latest
@@ -31,17 +32,19 @@ services:
     volumes: 
       - ./config.sh:/badgeforce/configuration/config.sh
     ports:
+      - "8801:8800"
       - "4005:4005"
     entrypoint: "bash -c \"\
         ./badgeforce/configuration/config.sh && \
         sawtooth-validator -vv \
-          --endpoint tcp://peer-validator:8801 \
+          --endpoint tcp://peer-validator:8800 \
           --bind component:tcp://eth0:4005 \
-          --bind network:tcp://eth0:8801 \
-          --network-auth challenge \
+          --bind network:tcp://eth0:8800 \
+          --peers tcp://127.0.0.1:8802 \
         \""
     networks: 
       - badgeforce-peer
+    stop_signal: SIGKILL
 
   rest-api:
     image: hyperledger/sawtooth-rest-api:1.0
@@ -53,6 +56,7 @@ services:
     entrypoint: sawtooth-rest-api -C tcp://peer-validator:4005 --bind rest-api:8009
     networks: 
       - badgeforce-peer
+    stop_signal: SIGKILL
 
 networks: 
   badgeforce-peer:

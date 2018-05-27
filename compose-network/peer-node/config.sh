@@ -21,8 +21,8 @@
 NETWORKPRIVKEY='BHINd*6Zetm/vj:wP?!uLfZ0:.Ng0{Znq.sw9TcA'
 NETWORKPUBKEY='L2Y$lQ@Uk=2miG0]OdUOPZ@bHeVin{xe^16^k-p?'
 PEERING='static'
-SEEDS='tcp://127.0.0.1:8800'
-PEERS='tcp://127.0.0.1:8800'
+SEEDS='tcp://127.0.0.1:8802'
+PEERS='tcp://127.0.0.1:8802'
 
 CONFIG_LOG_FILE_PATH="/var/log/sawtooth/validator-debug.log"
 CONFIG_PATH="/etc/sawtooth"
@@ -40,9 +40,9 @@ SAWTOOTH_DATA="/var/lib/sawtooth"
 # fi
 
 #   echo "Adding new /sawtooth/keys/validator.priv key" >> $CONFIG_LOG_FILE_PATH;
-  echo "peering = '$PEERING'" >> $CONFIG_PATH/validator.toml;
-  echo "peers = ['$PEERS']" >> $CONFIG_PATH/validator.toml;
-  echo "seeds = ['$SEEDS']" >> $CONFIG_PATH/validator.toml;
+  # echo "peering = '$PEERING'" >> $CONFIG_PATH/validator.toml;
+  # echo "peers = ['$PEERS']" >> $CONFIG_PATH/validator.toml;
+  # echo "seeds = ['$SEEDS']" >> $CONFIG_PATH/validator.toml;
 
 # if [ ! -e "/sawtooth/etc/validator.toml" ]; then
   echo "Adding networ public and private keys to $CONFIG_PATH/validator.toml" >> $CONFIG_LOG_FILE_PATH;

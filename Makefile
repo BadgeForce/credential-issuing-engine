@@ -4,16 +4,16 @@ ifndef $(GOPATH)
 endif
 
 network_up:
-	docker-compose -f badgeforce-network.yaml up --force-recreate 
+	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml up --force-recreate 
 
 network_down:
-	docker-compose -f badgeforce-network.yaml down 
+	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml down 
 
 network_peer: 
-	docker-compose -f ./peer-node/badgeforce-network-peer.yaml up --force-recreate
+	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml up --force-recreate
 
 network_peer_remove:
-	docker-compose -f ./peer-node/badgeforce-network-peer.yaml down
+	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml down
 
 compile_protobufers: protobuf_accounts protobuf_credentials
 
