@@ -72,7 +72,7 @@ services:
       - ./config.sh:/badgeforce/configuration/config.sh
     ports:
       - "4004:4004"
-      - "8802:8800"
+      - "8800:8800"
     entrypoint: "bash -c \"\
         ./badgeforce/configuration/config.sh && \
         sawtooth-validator -vv \

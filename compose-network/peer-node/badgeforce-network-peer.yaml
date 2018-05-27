@@ -40,7 +40,7 @@ services:
           --endpoint tcp://peer-validator:8800 \
           --bind component:tcp://eth0:4005 \
           --bind network:tcp://eth0:8800 \
-          --peers tcp://ec2-54-210-230-199.compute-1.amazonaws.com:8802 \
+          --peers tcp://ec2-54-210-230-199.compute-1.amazonaws.com:8800 \
         \""
     networks: 
       - badgeforce-peer
