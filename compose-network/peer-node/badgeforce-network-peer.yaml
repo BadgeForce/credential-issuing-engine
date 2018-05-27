@@ -24,7 +24,7 @@ services:
     stop_signal: SIGKILL
 
   peer-validator:
-    image: sawtooth-validator:latest
+    image: hyperledger/sawtooth-validator
     container_name: sawtooth-validator-default-peer
     expose:
       - 4005

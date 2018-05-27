@@ -1,8 +1,3 @@
-ifndef $(GOPATH)
-    GOPATH=$(shell go env GOPATH)
-    export GOPATH
-endif
-
 network_up:
 	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml up --force-recreate 
 
