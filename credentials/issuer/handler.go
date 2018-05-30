@@ -54,12 +54,12 @@ func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *pr
 
 	err = issuance.NewIssuanceState(context).SaveIssuance(newIssuance)
 	if err != nil {
-		return &processor.InternalError{Msg: "Could not save issuance"}
+		return &processor.InvalidTransactionError{Msg: "Could not save issuance"}
 	}
 
 	err = academic.NewAcademicState(context).SaveCredential(credential)
 	if err != nil {
-		return &processor.InternalError{Msg: fmt.Sprintf("Could not save SaveCredential %v", err.Error())}
+		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save SaveCredential %v", err.Error())}
 	}
 
 	return nil

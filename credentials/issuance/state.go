@@ -1,6 +1,8 @@
 package issuance
 
 import (
+	"fmt"
+
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	issuer_pb "github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb"
 	"github.com/gogo/protobuf/proto"
@@ -28,7 +30,7 @@ func NewIssuanceState(context *processor.Context) *IssuanceState {
 // GetIssuance ...
 func (s *IssuanceState) GetIssuance(signature, issuer string) (*issuer_pb.Issuance, error) {
 	var issuance issuer_pb.Issuance
-	address := common.MakeAddress(Namespace, signature+issuer)
+	address := common.IdentifierAddress(Namespace, issuer, fmt.Sprintf("%v%v", signature, issuer))
 	state, err := s.Context.GetState([]string{address})
 	if err != nil {
 		logger.Error(err)
@@ -45,7 +47,7 @@ func (s *IssuanceState) GetIssuance(signature, issuer string) (*issuer_pb.Issuan
 // SaveIssuance ...
 func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) error {
 	//validate this data
-	address := common.MakeAddress(Namespace, issuance.GetSignature()+issuance.GetIssuerPublicKey())
+	address := common.IdentifierAddress(Namespace, issuance.GetIssuerPublicKey(), fmt.Sprintf("%v%v", issuance.GetSignature(), issuance.GetIssuerPublicKey()))
 	b, err := proto.Marshal(issuance)
 	if err != nil {
 		logger.Error(err)
@@ -56,7 +58,7 @@ func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) error {
 	})
 	if err != nil {
 		logger.Errorf("ERROR", err, address)
-		return &processor.InternalError{Msg: "Here Could not set Issuance"}
+		return &processor.InvalidTransactionError{Msg: "Here Could not set Issuance"}
 	}
 
 	return nil
@@ -72,7 +74,7 @@ func (s *IssuanceState) Revoke(signature, issuer string) error {
 	issuance.RevokationStatus = true
 	err = s.SaveIssuance(issuance)
 	if err != nil {
-		return &processor.InternalError{Msg: "Could not set Issuance"}
+		return &processor.InvalidTransactionError{Msg: "Could not set Issuance"}
 	}
 
 	return nil

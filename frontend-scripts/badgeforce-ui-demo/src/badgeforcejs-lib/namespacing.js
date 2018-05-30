@@ -16,6 +16,10 @@ const identifierAddress = (prefix, id, postfix) => {
     return prefix.concat(idHash).concat(postFixHash);
 }
 
+const partialLeafAddress = (id, nameSpaceAddr) => {
+    return nameSpaceAddr.concat(createHash('sha512').update(id).digest('hex').toLowerCase().substring(0, 4));
+}
+
 module.exports = {
-    ACADEMIC, ISSUANCE, makeAddress, identifierAddress
+    ACADEMIC, ISSUANCE, makeAddress, identifierAddress, partialLeafAddress
 }

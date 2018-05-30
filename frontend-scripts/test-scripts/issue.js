@@ -101,8 +101,8 @@ const issue = () => {
     const payload = getPayload(academicCredAny, payloads.PayloadAction.ISSUE);
 
     const namespaceAddresses = [
-        namespaces.makeAddress(namespaces.ISSUANCE, academicCred.getSignature().concat(signer.getPublicKey().asHex())),
-        namespaces.makeAddress(namespaces.ACADEMIC, recipient.getPublicKey().asHex().concat(core.getName()).concat(core.getInstitutionid()))
+        namespaces.identifierAddress(namespaces.ISSUANCE, signer.getPublicKey().asHex(), academicCred.getSignature().concat(signer.getPublicKey().asHex())),
+        namespaces.identifierAddress(namespaces.ACADEMIC, recipient.getPublicKey().asHex(), recipient.getPublicKey().asHex().concat(core.getName()).concat(core.getInstitutionid()))
     ];
 
     const inputs = [...namespaceAddresses], outputs = [...namespaceAddresses];

@@ -196,7 +196,7 @@ class IssueForm extends Component {
         this.setState({loading: true});
         try {
             const files = document.getElementById('credentialImageUpload').files;
-            this.props.readImageFile(files, results => {
+            this.props.readImageFile(files.item(0), results => {
                 console.log(results);
                 this.setState({loading: false, image: results});
                 this.props.notify('Image uploaded', toast.TYPE.SUCCESS);
@@ -254,7 +254,7 @@ class IssueForm extends Component {
     }
     render(){
         return (
-            <Form loading={this.state.loading} size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+            <Form loading={this.state.loading} size='large' error={this.state.formError ? true : undefined}>
                 <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
                 <Form.Input error={this.state.formError ? true : undefined} value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />
                 <Form.Group widths='equal'>
@@ -325,7 +325,7 @@ export class Issuer extends Component {
         this.importAccountDone = this.importAccountDone.bind(this);
         this.createAccount = this.createAccount.bind(this);
         this.downloadKeyPair = this.downloadKeyPair.bind(this);
-        this.badgeforceIssuer = new bjs.Issuer('', this.handleTransactionsUpdate);
+        this.badgeforceIssuer = new bjs.Issuer(this.handleTransactionsUpdate);
         this.demoCred = {
             school: 'BadgeForce University',
             institutionId: '123456'
@@ -333,15 +333,15 @@ export class Issuer extends Component {
 
         this.accountsTabRef = React.createRef();
         this.panes = [
-            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm issuer={this.badgeforceIssuer.account ? this.badgeforceIssuer.account.publicKey: null} notify={this.props.notify} demo={this.demoCred} readImageFile={this.badgeforceIssuer.readImageFile} warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
+            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm issuer={this.badgeforceIssuer.account ? this.badgeforceIssuer.account.publicKey: null} notify={this.props.notify} demo={this.demoCred} readImageFile={(files, done) => this.badgeforceIssuer.readFile(files, this.badgeforceIssuer.fileTypes.image, done)} warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
             { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm demoCred={this.demoCred} handle={this.handleRevoke} />}</Tab.Pane> },
-            { menuItem: <Menu.Item style={{width: '100%'}} ref={this.accountsTabRef} as={Button} key='accounts'>Accounts</Menu.Item>, render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
+            { menuItem: <Menu.Item ref={this.accountsTabRef} as={Button} key='accounts'>Accounts</Menu.Item>, render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
         ]
 
        
     }
     componentDidMount() {
-        if(this.badgeforceIssuer.account === null) animateElem(this.accountsTabRef.current, 'rubberBand', 5)
+        if(this.badgeforceIssuer.account === null) animateElem(this.accountsTabRef.current, 'flash', 5)
     }
     createAccount(password, name) {
         try {
@@ -362,17 +362,29 @@ export class Issuer extends Component {
         downloadAnchorNode.click();
         downloadAnchorNode.remove();
     }
-    async importAccountDone (account, error) {
+    async importAccountDone (error, account) {
         document.getElementById('accountUpload').value = '';
         let stateUpdate = {loading: {toggle: false, message: ''}};
         const handleErr = (error) => {
             if(error) {
-                let invalidPassword = this.badgeforceIssuer.accountErrors.invalidPassword;
-                const notifyMsg = (error && error.message === invalidPassword) ? 'Account password invalid, try re-enter password' : 'Something went wrong, try again'
+                let invalidPassword = this.badgeforceIssuer.accountErrors.invalidPassword,
+                    notifyMsg,
+                    confirm;
+
+                if(error.message === invalidPassword){
+                    notifyMsg = 'Account password invalid, try re-enter password';
+                    confirm = true;
+                } else {
+                    notifyMsg = error.message;
+                    confirm = false;
+                }
+
                 this.props.notify(notifyMsg, toast.TYPE.ERROR);
-                this.setState({...stateUpdate, confirmPassword: {show: true, account}});
+                this.setState({...stateUpdate, confirmPassword: {show: confirm, account}});
+                return true;
+            } else {
+                return false;
             }
-            return error;
         }
         
         if(!handleErr(error)) {
@@ -464,7 +476,7 @@ export class Issuer extends Component {
     
     render() {
         return (
-            <Grid style={{paddingTop: 100, height: '100vh', justifyContent: 'center'}} computer='sixteen' mobile={4} tablet={12} container columns={1} stackable>
+            <Grid.Column>
                 <PasswordConfirm loading={this.state.confirmPassword.loading} finish={(password) => {
                         this.setState({confirmPassword: {loading: false}});
                         try {
@@ -485,17 +497,11 @@ export class Issuer extends Component {
                     cancel={() => this.setState({confirmPassword: {show: false, account: null, loading: false}})
                 }
                 />
-                <Grid.Column computer='sixteen' mobile={4} tablet={12}>
-                    <Header as='h1' textAlign='center'>   
-                        <Header.Content>
-                            BadgeForce University Issuer
-                        </Header.Content>
-                        <Header.Subheader content='Issue some credentials to whoever you want, from our fictitous BadgeForce Issuer. These credentials are issued for REAL, so DO NOT USE ANY SENSITIVE DATA'/>
-                    </Header>
-                    <Tab menu={{ fluid: true, vertical: true}} menuPosition='left' panes={this.panes} />
+                <Grid.Column>
+                    <Tab menu={{ fluid: true, vertical: false}} panes={this.panes} />
                     <Transactions transactions={this.state.transactions}/>
                 </Grid.Column>
-            </Grid>
+            </Grid.Column>
         );
     }
 }

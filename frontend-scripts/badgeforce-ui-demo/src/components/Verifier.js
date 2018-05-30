@@ -4,8 +4,6 @@ import { Icon, List, Header, Card, Image, Form, Message, Grid, Transition, Butto
 import  bjs from '../badgeforcejs-lib'; 
 import { toast } from "react-toastify";
 
-import 'animate.css/animate.min.css';
-
 const moment = require('moment');
 
 export const animateElem = async (element, animation, times) => {
@@ -136,7 +134,7 @@ export class Verifier extends Component {
         this.showResults = this.showResults.bind(this);
         this.verifyButtonRef = React.createRef();
 
-        this.badgeforceVerifier = new bjs.BadgeforceVerifier('', this.handleStatusUpdate);
+        this.badgeforceVerifier = new bjs.BadgeforceVerifier(this.handleStatusUpdate);
 
     }
 
@@ -153,6 +151,7 @@ export class Verifier extends Component {
         this.setState({loading: true, results: null, visible: false});
         try {
             const files = document.getElementById('jsonUpload').files;
+            const file = files.item(0);
             const done = async (error, results) => {
                 document.getElementById('jsonUpload').value = '';
                 await sleep(2);
@@ -173,8 +172,7 @@ export class Verifier extends Component {
                 this.props.notify('Ready to verify', toast.TYPE.SUCCESS);
                 await animateElem(this.verifyButtonRef.current, 3, 'shake');
             }
-
-            this.badgeforceVerifier.readFile(files, done);
+            this.badgeforceVerifier.readFile(file, this.badgeforceVerifier.fileTypes.bfac, done);
         } catch (error) {
             console.log(error);
             await sleep(3);
@@ -282,20 +280,14 @@ export class Verifier extends Component {
 
     render() {
         return (
-            <Grid style={{paddingTop: 100, height: '100vh', justifyContent: 'center'}} container columns={1} stackable>
-                <Grid.Column computer='sixteen' mobile={4} tablet={12}>
-                    <Header
-                        as='h1'
-                        content='BadgeForce Verifier'
-                        textAlign='center'
-                        subheader='Enter the name of the Academic Credential, the Recipients public key, and the Institution ID of the issuing institution'
-                    />
-                    <Form loading={this.state.loading} size='large' style={{paddingTop: 25}} error={this.state.formError ? true : undefined}>
+            <Grid.Column>
+                <Grid.Column>
+                    <Form loading={this.state.loading} size='large' error={this.state.formError ? true : undefined}>
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.institutionId}  mobile={4} tablet={12} placeholder='Institution ID' onChange={(e, institutionId) => this.setState({institutionId: institutionId.value})} />
                         <Form.Group style={{display: 'flex', flexDirection: 'row', justifyContent: 'space-between'}}>
-                            <Form.Field>
+                            <Form.Field style={{paddingBottom: 10}}>
                                 <Button ref={this.verifyButtonRef} disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleVerify} size='large' content='verify' icon='check' labelPosition='right'/>
                             </Form.Field>
                             <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' size='large' content='Verify From BFAC File Upload' icon='upload' labelPosition='right' onClick={() => document.getElementById('jsonUpload').click()} />
@@ -305,7 +297,7 @@ export class Verifier extends Component {
                     </Form>
                 </Grid.Column>
                 {this.state.results ? this.showResults() : null}
-            </Grid>
+            </Grid.Column>
         );
     }
 }

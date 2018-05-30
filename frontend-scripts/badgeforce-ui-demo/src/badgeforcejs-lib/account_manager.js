@@ -24,28 +24,25 @@ export class AccountManager extends BadgeForceBase {
         }
     }
     
-    importAccount(files, password, finish) {
+    importAccount(files, password, done) {
         try {
             const file = files.item(0);
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                let account;
-                try {
+            const callback = (err, account) => {
+                if(err) {
+                    done(err, null);
+                } else {
                     try {
-                        account = JSON.parse(e.target.result).account;
-                    } catch (error) {
-                        throw new Error('Invalid file type');
+                        this.decryptAccount(password, account);
+                        done(null, this.account);
+                    } catch (error) {                    
+                        done(error, account);
                     }
-                    this.decryptAccount(password, account);
-                    finish(this.account, null);
-                } catch (error) {                    
-                    finish(account, error);
                 }
             }
-            reader.readAsText(file);
+            this.readFile(file, this.fileTypes.account, callback)
         }
         catch (error) {
-            throw new Error(error);
+            done(error, null);
         }
     }
 
@@ -65,7 +62,6 @@ export class AccountManager extends BadgeForceBase {
 
     decryptAccount(password, account) {
         try {
-            console.log(account);
             account = new BadgeForceAccount(account);
             const keys = this.newAccessKeyPair(password);
             const {status, plaintext} = cryptico.decrypt(account.account, keys.priv);

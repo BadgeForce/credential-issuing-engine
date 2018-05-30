@@ -40,8 +40,8 @@ SAWTOOTH_DATA="/var/lib/sawtooth"
   echo "network_private_key = '$NETWORKPRIVKEY'" >> $CONFIG_PATH/validator.toml;
   echo "network_public_key = '$NETWORKPUBKEY'" >> $CONFIG_PATH/validator.toml;
 # fi
-# poet registration create --enclave-module simulator
-# poet enclave basename --enclave-module simulator
+poet registration create --enclave-module simulator
+poet enclave basename --enclave-module simulator
 sawset genesis --key $KEY_DIR/validator.priv
 sawadm genesis
 # # if [ $NODEINDEX -eq 0 ] && [ ! -e "$SAWTOOTH_DATA/block-chain-id" ]; then

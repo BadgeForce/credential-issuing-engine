@@ -1,17 +1,15 @@
-import * as namespaces from './namespace_prefixes';
 import { Buffer } from 'buffer';
 import { BadgeForceBase, Results } from './badgeforce_base';
 const {createHash} = require('crypto');
 const {Core} = require('../protos/credentials/compiled').issuer_pb;
 const moment = require('moment');
 const secp256k1 = require('secp256k1')
-
-export class Verifier extends BadgeForceBase{
-
-    constructor(host, statusCB) {
-        super();
-        this.host = host;
-        this.statusCB = statusCB;
+const namespacing = require('./namespacing');
+export class Verifier extends BadgeForceBase {
+    
+    constructor(...args) {
+        super(args[1]);
+        this.statusCB = args[0];
         this.errMsgs = {
             proofOfIntegrityHash: (computed, fromState) => {
                 return `Proof of integrity hash computed:${computed} does not match hash from blockchain:${fromState}`
@@ -82,40 +80,14 @@ export class Verifier extends BadgeForceBase{
         return secp256k1.verify(dataHash, sigBytes, Buffer.from(degree.coreInfo.issuer, 'hex'));
     }
 
-    async readFile(files, callback) {
-        try {
-            const file = files.item(0);
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const contents = e.target.result;
-                let invalidFileType = null,
-                    degree = null;                   
-                try {
-                    const parsed = JSON.parse(contents);
-                    degree = this.decodeDegree(Buffer.from(parsed.data, 'base64')).coreInfo;
-                } catch (error) {
-                    invalidFileType = new Error('Invalid file type');
-                }
-                
-                callback(invalidFileType, degree);
-            }
-
-            reader.readAsText(file);
-        }
-
-        catch (error) {
-            throw new Error({message: 'Could not read file.', error});
-        }
-    }
-
     async verifyAcademic(recipient, credentialName, institutionId) {
         try {
-            const hashStateAddress = namespaces.makeAddress(namespaces.ACADEMIC, recipient.concat(credentialName).concat(institutionId));
+            const hashStateAddress = namespacing.makeAddress(namespacing.ACADEMIC, recipient.concat(credentialName).concat(institutionId));
             const storageHash = await this.getIPFSHash(hashStateAddress);
 
             const degree = await this.getDegreeCore(storageHash.hash);
             degree.storageHash = storageHash;
-            const issuanceStateAddress = namespaces.makeAddress(namespaces.ISSUANCE, degree.signature.concat(degree.coreInfo.issuer));
+            const issuanceStateAddress = namespacing.makeAddress(namespacing.ISSUANCE, degree.signature.concat(degree.coreInfo.issuer));
 
             const issuance = await this.getIssuance(issuanceStateAddress);
             return await this.performChecks(degree, issuance);

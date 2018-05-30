@@ -1,12 +1,35 @@
-import { Buffer } from 'buffer';
-
 const retry = require('async/retry');
 const {createHash} = require('crypto');
 const secp256k1 = require('secp256k1');
+const validator = require('validator');
 const {AcademicCredential, Core, StorageHash, Issuance} = require('../protos/credentials/compiled').issuer_pb;
-const REST_API_CHAIN = process.env.NODE_ENV === 'development' ? "http://localhost:3010" : 'http://127.0.0.1:8008';
-const REST_API_IPFS = process.env.NODE_ENV === 'development' ? "http://localhost:3010/ipfs" : 'http://127.0.0.1:8080/ipfs';
 
+export class Config {
+    
+    chainAPI = { host: 'http://127.0.0.1', port: 3010, endpoint: ''};
+    ipfsAPI = { host: 'http://127.0.0.1', port: 3010, endpoint: '/ipfs'}; 
+
+    constructor(config) {
+        this.validateConfig(config);
+    }
+
+    validateConfig(config) {
+        if(!config || !config.endpoints) return;
+        const { endpoints } = config;
+        if(!validator.isURL(endpoints.chain.host) && !validator.isPort(endpoints.chain.port+'')) throw new Error(`Invalid chain API config: ${endpoints.chain}`);
+        if(!validator.isURL(endpoints.ipfs.host) && !validator.isPort(endpoints.ipfs.port+'')) throw new Error(`Invalid IPFS API config: ${endpoints.ipfs}`);
+        this.chainAPI = endpoints.chain;
+        this.ipfsAPI = endpoints.ipfs;
+    }
+
+    getChainAPI(endpoint) {
+        return `${this.chainAPI.host}:${this.chainAPI.port}${endpoint}`;
+    }
+
+    getIPFSAPI() {
+        return `${this.ipfsAPI.host}:${this.ipfsAPI.port}${this.ipfsAPI.endpoint}`;
+    }
+}
 export class Results {
     constructor(statusCB) {
         this.default = {message: 'Pending', success: false}
@@ -28,25 +51,20 @@ export class Results {
     }
 }
 
-export class BadgeForceBase {
+export class ProtoDecoder {
+    protos = {
+        AcademicCredential: {name: Object.getPrototypeOf(AcademicCredential).constructor.name, verify: AcademicCredential.verify},
+        Issuance: {name: Object.getPrototypeOf(Issuance).constructor.name, verify: Issuance.verify},
+        StorageHash: {name: Object.getPrototypeOf(StorageHash).constructor.name, verify: StorageHash.verify}
+    };
+    
+    isValidProto(proto) {
+        const name = Object.getPrototypeOf(proto).constructor.name;
+        if(!this.protos[name]) return false;
 
-    readImageFile(files, finish) {
-        try {
-            const file = files.item(0);
-            if(Math.floor(file.size/1024/1024) > 50) throw new Error(`File Size ${Math.floor(file.size/1024/1024)}MB exceeds limit 50MB`)
-            const reader = new FileReader();
-            reader.onloadend = () => finish(reader.result);
-            reader.readAsDataURL(file);
-        }
-        catch (error) {
-            throw new Error(error);
-        }
+        return !this.protos[name].verify(proto);
     }
-
-    isValidPublicKey(key) {
-        return secp256k1.publicKeyVerify(Buffer.from(key, 'hex'));
-    }
-
+    
     decodeDegree(data) {
         return AcademicCredential.decode(new Uint8Array(data));
     }
@@ -57,6 +75,109 @@ export class BadgeForceBase {
 
     decodeStorageHash(data) {
         return StorageHash.decode(new Uint8Array(data));
+    }
+}
+
+export class Importer extends ProtoDecoder{
+    fileTypes = {
+        bfac: 'BFAC',  
+        account: 'ACCOUNT',
+        image: 'IMAGE', 
+        imageExts: ['image/jpg', 'image/jpeg', 'image/png']
+    };
+    accountArgsErr = args => `Invalid arguments ${args[0] ? 'callback' : 'undefined'} `
+        .concat('callback required');
+    imageArgsErr = args => `Invalid arguments ${args[0] ? 'callback' : 'undefined'} `
+        .concat('callback required');
+    imageSizeErr = size => `File Size ${Math.floor(size/1024/1024)}MB exceeds limit 50MB`;
+    bfacArgsErr = args => `Invalid arguments ${args[0] ? 'callback' : 'undefined'} `
+        .concat('callback required');
+    invalidFileTypeErr = fileType => `Invalid filetype: ${fileType}`;
+
+    validateImage(file) {
+        if(this.fileTypes.imageExts.filter(ftype => ftype !== file.type).length === 1) {
+            throw new Error(this.invalidFileTypeErr(file.type));
+        }
+        if(Math.floor(file.size/1024/1024) > 50) {
+            throw new Error(this.imageSizeErr(file.size));
+        }
+    }
+
+    import(args, fileType) {
+        let errorMsg = null,
+            read = null;
+        const reader = new FileReader();
+        switch (fileType) {
+            case this.fileTypes.account:
+                errorMsg = this.accountArgsErr(args);
+                reader.onload = this.accountJSONOnload(args[2]);
+                read = (file) => reader.readAsText(file);
+                break;
+            case this.fileTypes.bfac:
+                errorMsg = this.accountArgsErr(args);
+                reader.onload = this.bfacOnload(args[2]);
+                read = (file) => reader.readAsText(file);
+                break;
+            case this.fileTypes.image:
+                errorMsg = this.accountArgsErr(args);
+                reader.onloadend = this.imageOnLoad(args[2]);
+                read = (file) => reader.readAsDataURL(file);
+                break;
+            default:
+                throw new Error(this.invalidFileTypeErr(fileType));
+        }
+        if(!args || args.length < 3) throw new Error(errorMsg);
+        if(fileType === this.fileTypes.image) this.validateImage(args[0]);
+        read(args[0]);
+    }
+
+    accountJSONOnload(done) {
+        return (e) => {
+            let account,
+                err = null;
+            try {
+                account = JSON.parse(e.target.result).account;
+            } catch (error) {
+                err = new Error('Malformed account data');
+            }
+
+            done(err, account);
+        } 
+    }
+
+    bfacOnload(done) {
+        return (e) => {
+            const contents = e.target.result;
+            let invalidFileType = null,
+                degree = null;                   
+            try {
+                const parsed = JSON.parse(contents);
+                degree = this.decodeDegree(Buffer.from(parsed.data, 'base64')).coreInfo;
+            } catch (error) {
+                invalidFileType = new Error(this.invalidFileTypeErr('Unknown'));
+            }
+            
+            done(invalidFileType, degree);
+        }
+    }
+
+    imageOnLoad(done) {
+        return (reader) => done(reader.target.result);
+    }
+
+    readFile(file, fileType, callback) {
+        this.import([file, fileType, callback], fileType);
+    }
+}
+
+export class BadgeForceBase extends Importer{
+    constructor(config) {
+        super();
+        this.config = new Config(config);
+    }
+
+    isValidPublicKey(key) {
+        return secp256k1.publicKeyVerify(Buffer.from(key, 'hex'));
     }
 
     computeIntegrityHash(coreInfo) {
@@ -92,7 +213,7 @@ export class BadgeForceBase {
 
     async queryIPFS(hash) {
         try {
-            const uri = `${REST_API_IPFS}/${hash}`;
+            const uri = `${this.config.getIPFSAPI()}/${hash}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
             return await response.json();
@@ -103,7 +224,7 @@ export class BadgeForceBase {
 
     async queryState(address) {
         try {
-            const uri = `${REST_API_CHAIN}/state?address=${address}`;
+            const uri = this.config.getChainAPI(`/state?address=${address}`);
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
             return await response.json();

@@ -1,20 +1,17 @@
-import * as namespaces from './namespace_prefixes';
-import {issue} from './transaction';
-import bjs from '../badgeforcejs-lib';
-import { revoke } from './transaction';
+import { Transactor } from './transactor';
 import { AccountManager } from './account_manager';
 const {Core} = require('../protos/credentials/compiled').issuer_pb;
 const moment = require('moment');
-
-
+const { BatchStatusWatcher,  Batch, MetaData} = require('./batch_status_watcher');
+const namespacing = require('./namespacing');
 
 export class Issuer extends AccountManager {
+    transactor = new Transactor();
 
-    constructor(host, txWatcherCB) {
-        super();
-        this.host = host;
-        this.txWatcherCB = txWatcherCB;
-        this.batchStatusWatcher = new bjs.BatchStatusWatcher(this.txWatcherCB.bind(this));
+    constructor(...args) {
+        super(args[1]);
+        this.txWatcherCB = args[0];
+        this.batchStatusWatcher = new BatchStatusWatcher(this.txWatcherCB.bind(this));
         this.currentPasswordCache = null;
     }
 
@@ -22,8 +19,8 @@ export class Issuer extends AccountManager {
         try {
             coreData.issuer = this.account.publicKey;
             console.log(coreData);
-            const response = await issue(coreData, this.account.signer);
-            const batchForWatch = new bjs.Batch(response.link, new bjs.MetaData('ISSUE', `Issued ${coreData.name} credential to ${coreData.recipient}`, moment().toString()));
+            const response = await this.transactor.issue(coreData, this.account.signer);
+            const batchForWatch = new Batch(response.link, new MetaData('ISSUE', `Issued ${coreData.name} credential to ${coreData.recipient}`, moment().toString()));
             return this.batchStatusWatcher.subscribe(batchForWatch, this.txWatcherCB);
         } catch (error) {
             console.log(error)
@@ -34,11 +31,11 @@ export class Issuer extends AccountManager {
     async revoke(data) {
         try {
             const {recipient, credentialName, institutionId} = data;
-            const hashStateAddress = namespaces.makeAddress(namespaces.ACADEMIC, recipient.concat(credentialName).concat(institutionId));
+            const hashStateAddress = namespacing.identifierAddress(namespacing.ACADEMIC, recipient, recipient.concat(credentialName).concat(institutionId));
             const storageHash = await this.getIPFSHash(hashStateAddress);
             const degree = await this.getDegreeCore(storageHash.hash);
-            const response = await revoke(this.account.signer.sign(Core.encode(Core.create(degree.coreInfo)).finish()), this.account.signer);
-            const batchForWatch = new bjs.Batch(response.link, new bjs.MetaData('REVOKED', `Revoked credential ${credentialName} owned by ${recipient}`, moment().toString()));
+            const response = await this.transactor.revoke(this.account.signer.sign(Core.encode(Core.create(degree.coreInfo)).finish()), this.account.signer);
+            const batchForWatch = new Batch(response.link, new MetaData('REVOKED', `Revoked credential ${credentialName} owned by ${recipient}`, moment().toString()));
             return this.batchStatusWatcher.subscribe(batchForWatch, this.txWatcherCB);
         } catch (error) {
             throw new Error(error);

@@ -23,3 +23,8 @@ func ComputeNamespace(str string) string {
 func MakeAddress(prefix, postfix string) string {
 	return prefix + Hexdigest(postfix)[:64]
 }
+
+// IdentifierAddress . . .
+func IdentifierAddress(prefix, identifier, postfix string) string {
+	return prefix + Hexdigest(identifier)[:4] + Hexdigest(postfix)[:60]
+}
