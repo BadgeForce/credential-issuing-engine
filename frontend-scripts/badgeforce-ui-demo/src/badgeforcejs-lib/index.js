@@ -3,7 +3,6 @@ import { Verifier } from './verifier';
 import { Issuer } from './issuer';
 import  {BatchStatusWatcher, MetaData, Watcher, Batch, } from './batch_status_watcher';
 import {BadgeForceBase} from './badgeforce_base';
-import {Store} from './ui-store';
 
 export default {
     namespacing: namespacing, 
@@ -14,5 +13,4 @@ export default {
     Watcher: Watcher, 
     Batch: Batch,
     BadgeForceBase: BadgeForceBase,
-    Store: Store
 }

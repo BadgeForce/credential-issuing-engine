@@ -9,8 +9,9 @@ export class Issuer extends AccountManager {
     transactor = new Transactor();
 
     constructor(...args) {
-        super(args[1]);
-        this.txWatcherCB = args[0];
+        super();
+        this.account = args[0];
+        this.txWatcherCB = args[1];
         this.batchStatusWatcher = new BatchStatusWatcher(this.txWatcherCB.bind(this));
         this.currentPasswordCache = null;
     }

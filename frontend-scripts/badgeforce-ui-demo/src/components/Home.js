@@ -4,17 +4,20 @@ import { Verifier } from './Verifier';
 import { Issuer } from './Issuer';
 import { Badges } from './Badges';
 import { ToastContainer, toast } from "react-toastify";
+import {observer, inject} from 'mobx-react';
 import 'react-toastify/dist/ReactToastify.css';
 
+@inject('accountStore')
+@observer
 export class Home extends Component {  
     constructor(props) {
         super(props);
         this.state = {
             active: 'verifier',
-            account: ''
         }
         this.notify = this.notify.bind(this);
         this.updateToast = this.updateToast.bind(this);
+        this.getCurrentAccountHeader = this.getCurrentAccountHeader.bind(this);
 
         this.headers = {
             verifier: {
@@ -30,6 +33,8 @@ export class Home extends Component {
                 subheader: 'Current badges for this account'
             }     
         }
+
+        this.accountStore = this.props.accountStore;
     }
 
     notify(message, type) {
@@ -45,11 +50,11 @@ export class Home extends Component {
         let component;
         switch (this.state.active) {
             case 'issuer':
-                component = <Issuer updateAccount={(account => this.setState({account}))} updateToast={this.updateToast} notify={this.notify} />;
+                component = <Issuer updateToast={this.updateToast} notify={this.notify} />;
                 break;
             
             case 'badges': 
-                component = <Badges account={this.state.account || ''} updateToast={this.updateToast} notify={this.notify} />
+                component = <Badges updateToast={this.updateToast} notify={this.notify} />
                 break;
             default:
                 component = <Verifier updateToast={this.updateToast} notify={this.notify} />
@@ -63,6 +68,13 @@ export class Home extends Component {
         return this.subheaders[this.state.active]
     }
 
+    getCurrentAccountHeader() {
+        if(this.accountStore.current) {
+            return `Active Account: ${this.accountStore.current.account.publicKey}`;
+        }
+        return 'No Account Detected';
+    }
+
     render() {
       return (
         <Grid style={{paddingTop: 40}} columns={2} centered container stackable>
@@ -71,7 +83,7 @@ export class Home extends Component {
                 <ToastContainer autoClose={5000} />
                 <Grid.Column width={4} >
                     <Menu vertical size='huge' fluid>
-                        <Menu.Item icon='key' header name={this.state.account ? `Active Account: ${this.state.account}` : 'No Account Detected'} />
+                        <Menu.Item icon='key' header name={this.getCurrentAccountHeader()} />
                         <Menu.Item>
                             <Icon name='student' />
                             <Menu.Menu>

@@ -17,7 +17,6 @@ class BadgeForceAccount {
 export class AccountManager extends BadgeForceBase {
     constructor() {
         super();
-        this.account = null;
         this.accountErrors = {
             accountNotFound: 'Account not imported, import or create new account',
             invalidPassword: 'Invalid password'
@@ -32,8 +31,9 @@ export class AccountManager extends BadgeForceBase {
                     done(err, null);
                 } else {
                     try {
-                        this.decryptAccount(password, account);
-                        done(null, this.account);
+                        const decrypted = this.decryptAccount(password, account);
+                        console.log(decrypted);
+                        done(null, decrypted);
                     } catch (error) {                    
                         done(error, account);
                     }
@@ -50,11 +50,11 @@ export class AccountManager extends BadgeForceBase {
         try {
             const keys = this.newAccessKeyPair(password);
             const signer = new CryptoFactory(context).newSigner(context.newRandomPrivateKey());
-            const account = JSON.stringify({publicKey: signer.getPublicKey().asHex(), privateKey: signer._privateKey.asHex()});
-            this.account = new BadgeForceAccount({account: cryptico.encrypt(account, keys.pub, keys.priv).cipher});
-            this.account.signer = signer;
-            this.account.publicKey = signer.getPublicKey().asHex();
-            return true;
+            const str = JSON.stringify({publicKey: signer.getPublicKey().asHex(), privateKey: signer._privateKey.asHex()});
+            const account = new BadgeForceAccount({account: cryptico.encrypt(str, keys.pub, keys.priv).cipher});
+            account.signer = signer;
+            account.publicKey = signer.getPublicKey().asHex();
+            return account;
         } catch (error) {
             throw new Error(error);
         }
@@ -73,7 +73,7 @@ export class AccountManager extends BadgeForceBase {
             account.signer = new CryptoFactory(context).newSigner(new Secp256k1PrivateKey(Buffer.from(decrypted.privateKey, 'hex')));
             account.publicKey = account.signer.getPublicKey().asHex();
 
-            this.account = account;
+            return account;
         } catch (error) {
             throw new Error(error.message);
         }

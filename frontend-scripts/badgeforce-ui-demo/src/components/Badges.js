@@ -1,21 +1,24 @@
 import React, { Component } from 'react';
-import ReactDOM from 'react-dom';
-import { Icon, List, Header, Card, Image, Form, Message, Grid, Dimmer, Loader } from 'semantic-ui-react'
-import  bjs from '../badgeforcejs-lib';
+import { List, Header, Image, Grid, Dimmer, Loader } from 'semantic-ui-react'
 import { Credential } from './Verifier'; 
 import { toast } from "react-toastify";
-import { Store } from '../badgeforcejs-lib/ui-store';
+import {observer, inject} from 'mobx-react';
 
 const moment = require('moment');
 
+@inject('accountStore')
+@observer
 export class CompactInfoList extends Component{
-    handleClick = (name) => {
-        this.props.setActive(name);
+    accountStore = this.props.accountStore;
+    
+    handleClick = (badge, key) => {
+        this.props.setActive(badge, key);
     }
     getList = () => {
-        return this.props.badges.map((badge, i) => {
+        return Object.keys(this.accountStore.badgeStore.cache).map((key, i) => {
+            const badge = this.accountStore.badgeStore.cache[key];
             return (
-                <List.Item onClick={() => this.handleClick(badge)} key={i}>
+                <List.Item onClick={() => this.handleClick(badge, key)} key={i}>
                     <Image avatar src={badge.coreInfo.image} />
                     <List.Content>
                         <List.Header as='a'>{badge.coreInfo.name}</List.Header>
@@ -28,47 +31,38 @@ export class CompactInfoList extends Component{
     render() {
         return(
             <List>
-                {this.props.badges.length > 0 ? this.getList() : null}
+                {Object.keys(this.accountStore.badgeStore.cache).length > 0 ? this.getList() : null}
             </List>
         );
     }
 }
 
+@inject('accountStore')
+@observer
 export class Badges extends Component {
     constructor(props) {
         super(props);
         this.state = {
             active: null,
-            badges: [],
+            key: null,
             loading: true
         }
 
-        console.log(this.props.account);
-        this.badgeStore = new Store(this.props.account).badgeStore;
+        this.accountStore = this.props.accountStore;
     }
 
-    async componentWillMount() {
-        try {
-            await this.badgeStore.poll();
-            const badges = await this.badgeStore.getAllBadges();
-            console.log(badges);
-            this.setState({badges: [...this.state.badges, ...badges], loading: false, active: badges[0]});
-        } catch (error) {
-            console.log(error);
-        }
-    }
     renderBadges() {
         return (
             <Grid.Row>
                 <Grid.Column width={4} >
-                    <CompactInfoList setActive={(active) => this.setState({active})} badges={this.state.badges} />
+                    <CompactInfoList setActive={(active, key) => this.setState({active, key})} />
                 </Grid.Column> 
                 <Grid.Column style={{height: '100vh'}} computer={12} mobile={4} tablet={12}>
                     {this.state.active ? <Credential
                         full={true}
                         data={this.state.active.coreInfo} 
                         signature={this.state.active.signature} 
-                        ipfs={'this.state.active.storageHash.hash'}
+                        ipfs={this.state.key}
                     />: null}
                 </Grid.Column>  
             </Grid.Row>
@@ -77,9 +71,6 @@ export class Badges extends Component {
     noBadges() {
         return(
             <Grid.Row>
-                <Dimmer active={this.state.loading}>
-                    <Loader indeterminate>Fetching Badges </Loader>
-                </Dimmer>
                 <Grid.Column computer={12} mobile={4} tablet={12}>
                     <Header style={{display: 'flex', alignItems: 'center'}} as='h1' content='No Badges Found For This Account' textAlign='center' /> 
                 </Grid.Column> 
@@ -89,8 +80,11 @@ export class Badges extends Component {
     render() {
         return (
             <Grid.Column>
+                {/* <Dimmer active={this.state.loading}>
+                    <Loader indeterminate>Fetching Badges </Loader>
+                </Dimmer> */}
                 <Grid columns={2} centered container stackable>
-                     {this.state.badges.length > 0 ? this.renderBadges() : this.noBadges()}
+                     {Object.keys(this.accountStore.badgeStore.cache).length > 0 ? this.renderBadges() : this.noBadges()}
                 </Grid>
             </Grid.Column>
         )

@@ -1,15 +1,16 @@
 import React, { Component } from 'react';
 import DatePicker from 'react-datepicker';
 import { Loader, Icon, Feed, Header, Form, Grid, Confirm, Input, Tab, Message, Menu, Button } from 'semantic-ui-react'
-import  bjs from '../badgeforcejs-lib'; 
+import  { AccountManager } from '../badgeforcejs-lib/account_manager';
+import { Issuer as Account } from '../badgeforcejs-lib/issuer';
 import { toast } from "react-toastify";
+import {observer, inject} from 'mobx-react';
 import { Credential, animateElem, sleep } from './Verifier';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'animate.css/animate.min.css';
 
 const moment = require('moment');
-
-const base = new bjs.BadgeForceBase();
+const accountManager = new AccountManager();
 class Transaction extends Component {
     constructor(props) {
         super(props);
@@ -86,7 +87,7 @@ class RevokeForm extends Component {
     }
     isValidForm() {
         const errors = [
-            !base.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
+            !accountManager.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
             this.state.credentialName === '' ? new Error('Credential name is required') : null
         ].filter(error => {
             return error !== null;
@@ -184,6 +185,8 @@ class NewAccountForm extends Component {
     }
 }
 
+@inject('accountStore')
+@observer
 class IssueForm extends Component {
     constructor(props){
         super(props);
@@ -191,12 +194,14 @@ class IssueForm extends Component {
         this.showFormErrors = this.showFormErrors.bind(this);
         this.showNoAccountWarning = this.showNoAccountWarning.bind(this);
         this.isValidForm = this.isValidForm.bind(this);
+
+        this.accountStore = this.props.accountStore;
     }
     uploadImage = (e) => {
         this.setState({loading: true});
         try {
             const files = document.getElementById('credentialImageUpload').files;
-            this.props.readImageFile(files.item(0), results => {
+            accountManager.readFile(files.item(0), accountManager.fileTypes.image, results => {
                 console.log(results);
                 this.setState({loading: false, image: results});
                 this.props.notify('Image uploaded', toast.TYPE.SUCCESS);
@@ -216,14 +221,14 @@ class IssueForm extends Component {
     }
 
     getPreview = () => {
-        return <Credential full={false} data={{...this.props.demo, issuer: this.props.issuer, ...this.state}} />
+        return <Credential full={false} data={{...this.props.demo, issuer: this.accountStore.current.account.publicKey, ...this.state}} />
     }
 
     isValidForm() {
         this.setState({formErrors: []})
         let formErrors = [];
         return [
-            !base.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
+            !accountManager.isValidPublicKey(this.state.recipient) ? new Error('Invalid public key for recipient') : null,
             this.state.name === '' ? new Error('Credential name is required') : null,
             this.state.dateEarned === null ? new Error('Date earned is required') : null,
             this.state.expiration && moment().isAfter(this.state.expiration) ? new Error('Cannot issue an expired credential') : null
@@ -303,6 +308,8 @@ class PasswordConfirm extends Component {
         );
     }
 }
+@inject('accountStore')
+@observer
 export class Issuer extends Component {
     constructor(props) {
         super(props);
@@ -325,7 +332,8 @@ export class Issuer extends Component {
         this.importAccountDone = this.importAccountDone.bind(this);
         this.createAccount = this.createAccount.bind(this);
         this.downloadKeyPair = this.downloadKeyPair.bind(this);
-        this.badgeforceIssuer = new bjs.Issuer(this.handleTransactionsUpdate);
+
+        this.accountStore = this.props.accountStore;
         this.demoCred = {
             school: 'BadgeForce University',
             institutionId: '123456'
@@ -333,7 +341,7 @@ export class Issuer extends Component {
 
         this.accountsTabRef = React.createRef();
         this.panes = [
-            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm issuer={this.badgeforceIssuer.account ? this.badgeforceIssuer.account.publicKey: null} notify={this.props.notify} demo={this.demoCred} readImageFile={(files, done) => this.badgeforceIssuer.readFile(files, this.badgeforceIssuer.fileTypes.image, done)} warn={this.badgeforceIssuer.account === null} handle={this.handleIssue} />}</Tab.Pane> },
+            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm notify={this.props.notify} warn={this.accountStore.current === null} handle={this.handleIssue} />}</Tab.Pane> },
             { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm demoCred={this.demoCred} handle={this.handleRevoke} />}</Tab.Pane> },
             { menuItem: <Menu.Item ref={this.accountsTabRef} as={Button} key='accounts'>Accounts</Menu.Item>, render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
         ]
@@ -341,21 +349,20 @@ export class Issuer extends Component {
        
     }
     componentDidMount() {
-        if(this.badgeforceIssuer.account === null) animateElem(this.accountsTabRef.current, 'flash', 5)
+        if(this.accountStore.current === null) animateElem(this.accountsTabRef.current, 'flash', 5)
     }
-    createAccount(password, name) {
+    async createAccount(password, name) {
         try {
-            this.badgeforceIssuer.newAccount(password);
+            await this.accountStore.newAccount(new Account(accountManager.newAccount(password), this.handleTransactionsUpdate.bind(this)));
             this.downloadKeyPair(name);
             this.props.notify('Account Created', toast.TYPE.SUCCESS);
-            this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
         } catch (error) {
             console.log(error);
             this.props.notify('Something Went Wrong!', toast.TYPE.ERROR);
         }
     }
     downloadKeyPair(name) {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(this.badgeforceIssuer.account.downloadStr);
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(this.accountStore.current.account.downloadStr);
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href",     dataStr);
         downloadAnchorNode.setAttribute("download", `badgeforce-keys${name ? name: moment().toISOString()}.json`);
@@ -367,7 +374,7 @@ export class Issuer extends Component {
         let stateUpdate = {loading: {toggle: false, message: ''}};
         const handleErr = (error) => {
             if(error) {
-                let invalidPassword = this.badgeforceIssuer.accountErrors.invalidPassword,
+                let invalidPassword = accountManager.accountErrors.invalidPassword,
                     notifyMsg,
                     confirm;
 
@@ -388,8 +395,8 @@ export class Issuer extends Component {
         }
         
         if(!handleErr(error)) {
+            await this.accountStore.newAccount(new Account(account, this.handleTransactionsUpdate.bind(this)));
             this.props.notify('Account Imported', toast.TYPE.SUCCESS);
-            this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
             this.setState(stateUpdate);
         }   
     }
@@ -397,7 +404,7 @@ export class Issuer extends Component {
         this.setState({results: null, visible: false, loading: true});
         try {
             const files = document.getElementById('accountUpload').files;
-            this.badgeforceIssuer.importAccount(files, password, this.importAccountDone);
+            accountManager.importAccount(files, password, this.importAccountDone);
         } catch (error) {
             console.log(error);
             await this.sleep(3);
@@ -433,12 +440,12 @@ export class Issuer extends Component {
                 recipient,
                 dateEarned: dateEarned.unix().toString(),
                 expiration: expiration.unix().toString(),
-                issuer: this.badgeforceIssuer.account.publicKey,
+                issuer: this.accountStore.current.account.publicKey,
                 name,
                 image
             }
 
-            const watcher = await this.badgeforceIssuer.issueAcademic(coreData);
+            const watcher = await this.accountStore.current.issueAcademic(coreData);
             console.log(watcher);
             this.setState(prevState => ({
                 loading: {toggle: false, message: ''},
@@ -460,7 +467,7 @@ export class Issuer extends Component {
     async handleRevoke(data) {
         this.setState({results: null, visible: false, loading: true});
         try {
-            const watcher = await this.badgeforceIssuer.revoke(data);
+            const watcher = await this.accountStore.current.revoke(data);
             this.setState(prevState => ({
                 loading: {toggle: false, message: ''},
                 visible: true,
@@ -480,13 +487,13 @@ export class Issuer extends Component {
                 <PasswordConfirm loading={this.state.confirmPassword.loading} finish={(password) => {
                         this.setState({confirmPassword: {loading: false}});
                         try {
-                            this.badgeforceIssuer.decryptAccount(password.value, this.state.confirmPassword.account);
+                            const account = accountManager.decryptAccount(password.value, this.state.confirmPassword.account);
+                            account.txWatcherCB = this.handleTransactionsUpdate.bind(this);
                             this.props.notify('Account imported', toast.TYPE.SUCCESS);
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
-                            this.props.updateAccount(this.badgeforceIssuer.account.publicKey);
                         } catch (error) {
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
-                            if(error.message === this.badgeforceIssuer.accountErrors.invalidPassword) {
+                            if(error.message === accountManager.accountErrors.invalidPassword) {
                                 this.props.notify('Account Password still Invalid, try re-uploading', toast.TYPE.ERROR);
                             } else {
                                 this.props.notify('Something went wrong', toast.TYPE.ERROR);
