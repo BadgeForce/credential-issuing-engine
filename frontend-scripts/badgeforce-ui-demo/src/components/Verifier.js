@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { Icon, List, Header, Card, Image, Form, Message, Grid, Transition, Button } from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
 import { toast } from "react-toastify";
+import QrReader from 'react-qr-reader'
 
 const moment = require('moment');
 
@@ -125,14 +126,18 @@ export class Verifier extends Component {
             visible: false,
             formError: null,
             formErrors: [],
+            qrcode: false,
         }
 
+        this.handleScan = this.handleScan.bind(this)
         this.handleVerify = this.handleVerify.bind(this);
         this.isValidForm = this.isValidForm.bind(this);
         this.uploadJSON = this.uploadJSON.bind(this);
         this.handleStatusUpdate = this.handleStatusUpdate.bind(this);
         this.showResults = this.showResults.bind(this);
+        this.showQRScanner = this.showQRScanner.bind(this);
         this.verifyButtonRef = React.createRef();
+        this.qrScannerRef = React.createRef();
 
         this.badgeforceVerifier = new bjs.BadgeforceVerifier(this.handleStatusUpdate);
 
@@ -247,6 +252,14 @@ export class Verifier extends Component {
             }
         }        
     }
+    showQRScanner() {
+        this.setState({qrcode: true}, () => {
+            this.qrScannerRef.current.openImageDialog();
+        })
+    }
+    handleScan(data) {
+        this.props.notify(data.toString())
+    }
     showResults() {
         return (
             <Grid.Row container='true' columns={2} stackable='true'>
@@ -281,6 +294,18 @@ export class Verifier extends Component {
     render() {
         return (
             <Grid.Column>
+                {/* {this.state.qrcode ? <div>
+                    <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' size='large' content='Close' icon='close' labelPosition='right' onClick={() => this.setState({qrcode: false})} />
+                        <QrReader
+                        ref={this.qrScannerRef}
+                        delay={100}
+                        onError={err => this.props.notify('Something went wrong reading QR Code', toast.TYPE.ERROR)}
+                        onScan={this.handleScan}
+                        style={{ width: '100%' }}
+                        legacyMode={true}
+                    />
+                </div>
+                : null} */}
                 <Grid.Column>
                     <Form loading={this.state.loading} size='large' error={this.state.formError ? true : undefined}>
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
@@ -290,7 +315,8 @@ export class Verifier extends Component {
                             <Form.Field style={{paddingBottom: 10}}>
                                 <Button ref={this.verifyButtonRef} disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.handleVerify} size='large' content='verify' icon='check' labelPosition='right'/>
                             </Form.Field>
-                            <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' size='large' content='Verify From BFAC File Upload' icon='upload' labelPosition='right' onClick={() => document.getElementById('jsonUpload').click()} />
+                            {/* <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='orange' size='large' content='Verify From QR Code Scan' icon='qrcode' labelPosition='right' onClick={this.showQRScanner} /> */}
+                            <Form.Button disabled={this.state.loading} style={{display: 'flex', alignSelf: 'flex-start'}} color='black' size='large' content='Verify From BFAC File Upload' icon='upload' labelPosition='right' onClick={() => document.getElementById('jsonUpload').click()} />
                         </Form.Group>
                         {this.state.formErrors.length > 0 ? this.showFormErrors() : null}
                         <input type="file" id="jsonUpload" onChange={this.uploadJSON} style={{display: 'none'}} />  

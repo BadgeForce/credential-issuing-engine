@@ -4866,6 +4866,10 @@ jsprim@^1.2.2:
     json-schema "0.2.3"
     verror "1.10.0"
 
+jsqr@^1.0.1:
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/jsqr/-/jsqr-1.0.4.tgz#e2ea353fa81007708efab7d95b2652a7254c10dd"
+
 jsx-ast-utils@^1.4.0:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/jsx-ast-utils/-/jsx-ast-utils-1.4.1.tgz#3867213e8dd79bf1e8f2300c0cfc1efb182c0df1"
@@ -6372,7 +6376,7 @@ promise@^7.1.1:
   dependencies:
     asap "~2.0.3"
 
-prop-types@^15.5.10, prop-types@^15.6.0, prop-types@^15.6.1:
+prop-types@^15.5.10, prop-types@^15.5.8, prop-types@^15.6.0, prop-types@^15.6.1:
   version "15.6.1"
   resolved "https://registry.yarnpkg.com/prop-types/-/prop-types-15.6.1.tgz#36644453564255ddda391191fb3a125cbdf654ca"
   dependencies:
@@ -6625,6 +6629,14 @@ react-proxy@^1.1.7:
   dependencies:
     lodash "^4.6.1"
     react-deep-force-update "^1.0.0"
+
+react-qr-reader@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/react-qr-reader/-/react-qr-reader-2.1.0.tgz#f429c196675a710926da1cc9057223b79358da75"
+  dependencies:
+    jsqr "^1.0.1"
+    prop-types "^15.5.8"
+    webrtc-adapter "^6.1.1"
 
 react-scripts@^1.1.4:
   version "1.1.4"
@@ -7025,6 +7037,12 @@ ripemd160@^2.0.0, ripemd160@^2.0.1:
     hash-base "^3.0.0"
     inherits "^2.0.1"
 
+rtcpeerconnection-shim@^1.2.10:
+  version "1.2.11"
+  resolved "https://registry.yarnpkg.com/rtcpeerconnection-shim/-/rtcpeerconnection-shim-1.2.11.tgz#df2b2456020365daf26bf8c135523bca2deb252b"
+  dependencies:
+    sdp "^2.6.0"
+
 run-async@^2.2.0:
   version "2.3.0"
   resolved "https://registry.yarnpkg.com/run-async/-/run-async-2.3.0.tgz#0371ab4ae0bdd720d4166d7dfda64ff7a445a6c0"
@@ -7102,6 +7120,10 @@ schema-utils@^0.4.5:
   dependencies:
     ajv "^6.1.0"
     ajv-keywords "^3.1.0"
+
+sdp@^2.6.0, sdp@^2.7.0:
+  version "2.7.4"
+  resolved "https://registry.yarnpkg.com/sdp/-/sdp-2.7.4.tgz#cac76b0e2f16f55243d25bc0432f6bbb5488bfc1"
 
 secp256k1@^3.2.5, secp256k1@^3.5.0:
   version "3.5.0"
@@ -8301,6 +8323,13 @@ webpack@3.8.1:
     watchpack "^1.4.0"
     webpack-sources "^1.0.1"
     yargs "^8.0.2"
+
+webrtc-adapter@^6.1.1:
+  version "6.2.1"
+  resolved "https://registry.yarnpkg.com/webrtc-adapter/-/webrtc-adapter-6.2.1.tgz#4d0eda592f27d5f3288ea8ae11c1245ac156d676"
+  dependencies:
+    rtcpeerconnection-shim "^1.2.10"
+    sdp "^2.7.0"
 
 websocket-driver@>=0.5.1:
   version "0.7.0"
