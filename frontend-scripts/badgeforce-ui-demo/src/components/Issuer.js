@@ -484,11 +484,11 @@ export class Issuer extends Component {
     render() {
         return (
             <Grid.Column>
-                <PasswordConfirm loading={this.state.confirmPassword.loading} finish={(password) => {
+                <PasswordConfirm loading={this.state.confirmPassword.loading} finish={async (password) => {
                         this.setState({confirmPassword: {loading: false}});
                         try {
                             const account = accountManager.decryptAccount(password.value, this.state.confirmPassword.account);
-                            account.txWatcherCB = this.handleTransactionsUpdate.bind(this);
+                            await this.accountStore.newAccount(new Account(account, this.handleTransactionsUpdate.bind(this)));
                             this.props.notify('Account imported', toast.TYPE.SUCCESS);
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
                         } catch (error) {

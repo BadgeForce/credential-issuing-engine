@@ -1,11 +1,13 @@
 import React, { Component } from 'react';
-import { List, Header, Image, Grid, Dimmer, Loader } from 'semantic-ui-react'
-import { Credential } from './Verifier'; 
+import { List, Header, Image, Grid, Dimmer, Loader, Button } from 'semantic-ui-react'
+import { Credential } from './Verifier';
+import { ProtoDecoder } from '../badgeforcejs-lib/badgeforce_base' 
 import { toast } from "react-toastify";
 import {observer, inject} from 'mobx-react';
+const QRCode = require('qrcode.react');
 
 const moment = require('moment');
-
+const decoder = new ProtoDecoder();
 @inject('accountStore')
 @observer
 export class CompactInfoList extends Component{
@@ -47,7 +49,8 @@ export class Badges extends Component {
             key: null,
             loading: true
         }
-
+        this.downloadQRC = this.downloadQRC.bind(this);
+        this.qrc = React.createRef();
         this.accountStore = this.props.accountStore;
     }
 
@@ -58,14 +61,28 @@ export class Badges extends Component {
                     <CompactInfoList setActive={(active, key) => this.setState({active, key})} />
                 </Grid.Column> 
                 <Grid.Column style={{height: '100vh'}} computer={12} mobile={4} tablet={12}>
-                    {this.state.active ? <Credential
-                        full={true}
-                        data={this.state.active.coreInfo} 
-                        signature={this.state.active.signature} 
-                        ipfs={this.state.key}
-                    />: null}
+                    {this.state.active ? this.renderActive() : null}
                 </Grid.Column>  
             </Grid.Row>
+        );
+    }
+    downloadQRC() {
+        const link = document.createElement("a");
+        link.href = document.getElementById('qrcode').toDataURL();
+        link.download = `badgeforce-credential-${this.state.active.coreInfo.name}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    renderActive() {
+        const qrCodeVal = JSON.stringify({data: decoder.encodedQRStorageHash(this.state.key)});
+        console.log(qrCodeVal);
+        return(
+            <div>
+                <Credential full={true} data={this.state.active.coreInfo} signature={this.state.active.signature} ipfs={this.state.key}/>
+                <QRCode id='qrcode' size={160} style={{height: 'auto', width: 'auto'}} value={qrCodeVal} />
+                <Button style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.downloadQRC} size='large' content='download qr code' icon='download' labelPosition='right'/>
+            </div>
         );
     }
     noBadges() {

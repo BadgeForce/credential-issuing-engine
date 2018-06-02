@@ -76,6 +76,12 @@ export class ProtoDecoder {
     decodeStorageHash(data) {
         return StorageHash.decode(new Uint8Array(data));
     }
+
+    encodedQRStorageHash(hash) {
+        console.log(hash)
+        const b = StorageHash.encode(StorageHash.create({hash})).finish();
+        return btoa(Array.prototype.toString.call(b))
+    }
 }
 
 export class Importer extends ProtoDecoder{

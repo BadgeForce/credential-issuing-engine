@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Grid, Menu, Icon, Header } from 'semantic-ui-react';
+import { Grid, Menu, Icon, Header, Dropdown, Input } from 'semantic-ui-react';
 import { Verifier } from './Verifier';
 import { Issuer } from './Issuer';
 import { Badges } from './Badges';
@@ -50,7 +50,7 @@ export class Home extends Component {
         let component;
         switch (this.state.active) {
             case 'issuer':
-                component = <Issuer updateToast={this.updateToast} notify={this.notify} />;
+                component = <Issuer updateToast={(id, message, type) => toast.update(id, {render: message, type, autoClose: 15000})} notify={this.notify} />;
                 break;
             
             case 'badges': 
@@ -84,14 +84,25 @@ export class Home extends Component {
                 <Grid.Column width={4} >
                     <Menu vertical size='huge' fluid>
                         <Menu.Item icon='key' header name={this.getCurrentAccountHeader()} />
+                        <Dropdown text='Switch Account' icon='filter' floating labeled item className='icon'>
+                            <Dropdown.Menu>
+                            <Input icon='search' iconPosition='left' className='search' />
+                            <Dropdown.Divider />
+                            <Dropdown.Menu scrolling>
+                                {this.accountStore.accounts
+                                .map(account => {return {text: account.account.publicKey, value: account.account.publicKey, label: { color: 'red', empty: true, circular: true }}})
+                                .map(option => <Dropdown.Item onClick={(e, data) => this.accountStore.switchAccount(data.value)} key={option.value} {...option} />)}
+                            </Dropdown.Menu>
+                            </Dropdown.Menu>
+                        </Dropdown>
                         <Menu.Item>
                             <Icon name='student' />
                             <Menu.Menu>
                                 <Menu.Item header name='badges' onClick={() => this.setState({active: 'badges'})} />
                             </Menu.Menu>
                         </Menu.Item>
-                        <Menu.Item icon='checkmark' header name='verifier' onClick={() => this.setState({active: 'verifier'})} />
                         <Menu.Item icon='university' header name='issuer' onClick={() => this.setState({active: 'issuer'})} />
+                        <Menu.Item icon='checkmark' header name='verifier' onClick={() => this.setState({active: 'verifier'})} />
                     </Menu>
                 </Grid.Column> 
                 <Grid.Column style={{height: '100vh'}} computer={12} mobile={4} tablet={12}>
