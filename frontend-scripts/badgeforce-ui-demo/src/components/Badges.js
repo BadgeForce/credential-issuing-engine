@@ -4,15 +4,20 @@ import { Credential } from './Verifier';
 import { ProtoDecoder } from '../badgeforcejs-lib/badgeforce_base' 
 import { toast } from "react-toastify";
 import {observer, inject} from 'mobx-react';
+import {reaction} from 'mobx';
 const QRCode = require('qrcode.react');
 
 const moment = require('moment');
-const decoder = new ProtoDecoder();
 @inject('accountStore')
 @observer
 export class CompactInfoList extends Component{
     accountStore = this.props.accountStore;
-    
+    componentWillMount() {
+        const keys = Object.keys(this.accountStore.badgeStore.cache);
+        if(keys.length > 0) {
+            this.props.setActive(this.accountStore.badgeStore.cache[keys[0]], keys[0])
+        }
+    }
     handleClick = (badge, key) => {
         this.props.setActive(badge, key);
     }
@@ -67,21 +72,22 @@ export class Badges extends Component {
         );
     }
     downloadQRC() {
+        const dataStr = "data:text/json;charset=utf-8," + JSON.stringify({data: ProtoDecoder.encodedQRDegree(this.state.active)});
         const link = document.createElement("a");
-        link.href = document.getElementById('qrcode').toDataURL();
-        link.download = `badgeforce-credential-${this.state.active.coreInfo.name}`;
+        link.href = dataStr;
+        link.download = `badgeforce-credential-${this.state.active.coreInfo.name}.bfac`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     }
     renderActive() {
-        const qrCodeVal = JSON.stringify({data: decoder.encodedQRStorageHash(this.state.key)});
-        console.log(qrCodeVal);
+        // const qrCodeVal = JSON.stringify({data: ProtoDecoder.encodedQRStorageHash(this.state.key)});
+        // console.log(qrCodeVal);
         return(
             <div>
                 <Credential full={true} data={this.state.active.coreInfo} signature={this.state.active.signature} ipfs={this.state.key}/>
-                <QRCode id='qrcode' size={160} style={{height: 'auto', width: 'auto'}} value={qrCodeVal} />
-                <Button style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.downloadQRC} size='large' content='download qr code' icon='download' labelPosition='right'/>
+                {/* <QRCode id='qrcode' size={160} style={{height: 'auto', width: 'auto'}} value={qrCodeVal} /> */}
+                <Button style={{display: 'flex', alignSelf: 'flex-start'}} color='blue' onClick={this.downloadQRC} size='large' content='download credential file' icon='download' labelPosition='right'/>
             </div>
         );
     }

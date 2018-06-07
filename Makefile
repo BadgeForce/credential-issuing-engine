@@ -10,6 +10,11 @@ network_peer:
 network_peer_remove:
 	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml down
 
+docker_build: 
+	docker build -f compose-network/badgeforce/nginx/Dockerfile -t reverse-proxy ./compose-network/badgeforce/nginx
+	docker build --build-arg SSH_PRIVATE_KEY=~/.ssh/id_rsa -f credentials/issuer/docker/Dockerfile -t badgeforce-issuer .		
+	docker build --build-arg SSH_PRIVATE_KEY=~/.ssh/id_rsa -f accounts/docker/Dockerfile -t badgeforce-accounts .		
+
 compile_protobufers: protobuf_accounts protobuf_credentials
 
 protobuf_accounts :

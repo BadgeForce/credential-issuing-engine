@@ -3,9 +3,10 @@ import DatePicker from 'react-datepicker';
 import { Loader, Icon, Feed, Header, Form, Grid, Confirm, Input, Tab, Message, Menu, Button } from 'semantic-ui-react'
 import  { AccountManager } from '../badgeforcejs-lib/account_manager';
 import { Issuer as Account } from '../badgeforcejs-lib/issuer';
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 import {observer, inject} from 'mobx-react';
 import { Credential, animateElem, sleep } from './Verifier';
+import { Toaster } from './Toaster';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'animate.css/animate.min.css';
 
@@ -204,12 +205,12 @@ class IssueForm extends Component {
             accountManager.readFile(files.item(0), accountManager.fileTypes.image, results => {
                 console.log(results);
                 this.setState({loading: false, image: results});
-                this.props.notify('Image uploaded', toast.TYPE.SUCCESS);
+                Toaster.notify('Image uploaded', toast.TYPE.SUCCESS);
                 document.getElementById('credentialImageUpload').value = '';
             });
         } catch (error) {
             console.log(error);
-            this.props.notify('Could not upload image, try again or issue without it', toast.TYPE.ERROR);
+            Toaster.notify('Could not upload image, try again or issue without it', toast.TYPE.ERROR);
         }
     }
     handleIssue = async () => {
@@ -341,7 +342,7 @@ export class Issuer extends Component {
 
         this.accountsTabRef = React.createRef();
         this.panes = [
-            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm notify={this.props.notify} warn={this.accountStore.current === null} handle={this.handleIssue} />}</Tab.Pane> },
+            { menuItem: 'Issue', render: () => <Tab.Pane>{<IssueForm notify={Toaster.notify} warn={this.accountStore.current === null} handle={this.handleIssue} />}</Tab.Pane> },
             { menuItem: 'Revoke', render: () => <Tab.Pane>{<RevokeForm demoCred={this.demoCred} handle={this.handleRevoke} />}</Tab.Pane> },
             { menuItem: <Menu.Item ref={this.accountsTabRef} as={Button} key='accounts'>Accounts</Menu.Item>, render: () => <Tab.Pane>{<NewAccountForm handleCreateAccount={this.createAccount} handleImportAccount={this.importAccount} />}</Tab.Pane> }
         ]
@@ -355,10 +356,10 @@ export class Issuer extends Component {
         try {
             await this.accountStore.newAccount(new Account(accountManager.newAccount(password), this.handleTransactionsUpdate.bind(this)));
             this.downloadKeyPair(name);
-            this.props.notify('Account Created', toast.TYPE.SUCCESS);
+            Toaster.notify('Account Created', toast.TYPE.SUCCESS);
         } catch (error) {
             console.log(error);
-            this.props.notify('Something Went Wrong!', toast.TYPE.ERROR);
+            Toaster.notify('Something Went Wrong!', toast.TYPE.ERROR);
         }
     }
     downloadKeyPair(name) {
@@ -386,7 +387,7 @@ export class Issuer extends Component {
                     confirm = false;
                 }
 
-                this.props.notify(notifyMsg, toast.TYPE.ERROR);
+                Toaster.notify(notifyMsg, toast.TYPE.ERROR);
                 this.setState({...stateUpdate, confirmPassword: {show: confirm, account}});
                 return true;
             } else {
@@ -395,8 +396,8 @@ export class Issuer extends Component {
         }
         
         if(!handleErr(error)) {
+            Toaster.notify('Account Imported', toast.TYPE.SUCCESS);
             await this.accountStore.newAccount(new Account(account, this.handleTransactionsUpdate.bind(this)));
-            this.props.notify('Account Imported', toast.TYPE.SUCCESS);
             this.setState(stateUpdate);
         }   
     }
@@ -454,7 +455,7 @@ export class Issuer extends Component {
                 transactions: [...prevState.transactions, watcher]
             }));
         } catch (error) {
-            this.props.notify('Something Went Wrong While Issuing!', toast.TYPE.ERROR);
+            Toaster.notify('Something Went Wrong While Issuing!', toast.TYPE.ERROR);
             this.setState({
                 results: null,
                 loading: {toggle: false, message: ''},
@@ -476,7 +477,7 @@ export class Issuer extends Component {
             }));
         } catch (error) {
             console.log(error);
-            this.props.notify('Something Went Wrong While Revoking!', toast.TYPE.ERROR);
+            Toaster.notify('Something Went Wrong While Revoking!', toast.TYPE.ERROR);
             this.setState({results: null, visible: false, loading: false});
         }
     }
@@ -484,19 +485,21 @@ export class Issuer extends Component {
     render() {
         return (
             <Grid.Column>
+                <ToastContainer autoClose={5000} />
                 <PasswordConfirm loading={this.state.confirmPassword.loading} finish={async (password) => {
                         this.setState({confirmPassword: {loading: false}});
                         try {
                             const account = accountManager.decryptAccount(password.value, this.state.confirmPassword.account);
                             await this.accountStore.newAccount(new Account(account, this.handleTransactionsUpdate.bind(this)));
-                            this.props.notify('Account imported', toast.TYPE.SUCCESS);
+                            Toaster.notify('Account imported', toast.TYPE.SUCCESS);
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
                         } catch (error) {
+                            console.log(error)
                             this.setState({confirmPassword: {show: false, account: null, loading: false}});
                             if(error.message === accountManager.accountErrors.invalidPassword) {
-                                this.props.notify('Account Password still Invalid, try re-uploading', toast.TYPE.ERROR);
+                                Toaster.notify('Account Password still Invalid, try re-uploading', toast.TYPE.ERROR);
                             } else {
-                                this.props.notify('Something went wrong', toast.TYPE.ERROR);
+                                Toaster.notify('Something went wrong', toast.TYPE.ERROR);
                             }
                         }
                     }}

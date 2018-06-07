@@ -12,7 +12,11 @@ export class BadgeStore {
     queryState = null;
 
     @observable cache = {};
-
+    constructor() {
+        if(location.hostname !== "localhost" && location.hostname !== "127.0.0.1") {
+            localforage.clear();
+        }
+    }
     async setAccount(issuer) {
         try {
             const {getDegreeCore, queryState } = issuer;
@@ -24,7 +28,6 @@ export class BadgeStore {
             this.store = localforage.createInstance({name: this.account});
             await this.load();
             await this.poll(); 
-            console.log(this.cache);
         } catch (error) {
             throw error;
         }

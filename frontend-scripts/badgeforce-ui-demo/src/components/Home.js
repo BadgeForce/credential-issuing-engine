@@ -15,8 +15,7 @@ export class Home extends Component {
         this.state = {
             active: 'verifier',
         }
-        this.notify = this.notify.bind(this);
-        this.updateToast = this.updateToast.bind(this);
+
         this.getCurrentAccountHeader = this.getCurrentAccountHeader.bind(this);
 
         this.headers = {
@@ -35,15 +34,6 @@ export class Home extends Component {
         }
 
         this.accountStore = this.props.accountStore;
-    }
-
-    notify(message, type) {
-        const id = toast(message, { autoClose: 15000, type, position: toast.POSITION.TOP_RIGHT });
-        return id;
-    }
-
-    updateToast(id, message, type) {
-        toast.update(id, {render: message, type, autoClose: 15000});
     }
 
     renderContent() {
@@ -80,7 +70,6 @@ export class Home extends Component {
         <Grid style={{paddingTop: 40}} columns={2} centered container stackable>
             <Header as='h1' content={this.headers[this.state.active].content} textAlign='center' subheader={this.headers[this.state.active].subheader} />
             <Grid.Row>
-                <ToastContainer autoClose={5000} />
                 <Grid.Column width={4} >
                     <Menu vertical size='huge' fluid>
                         <Menu.Item icon='key' header name={this.getCurrentAccountHeader()} />

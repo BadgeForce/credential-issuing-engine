@@ -82,12 +82,12 @@ export class Verifier extends BadgeForceBase {
 
     async verifyAcademic(recipient, credentialName, institutionId) {
         try {
-            const hashStateAddress = namespacing.makeAddress(namespacing.ACADEMIC, recipient.concat(credentialName).concat(institutionId));
+            const hashStateAddress = namespacing.identifierAddress(namespacing.ACADEMIC, recipient, recipient.concat(credentialName).concat(institutionId));
             const storageHash = await this.getIPFSHash(hashStateAddress);
 
             const degree = await this.getDegreeCore(storageHash.hash);
             degree.storageHash = storageHash;
-            const issuanceStateAddress = namespacing.makeAddress(namespacing.ISSUANCE, degree.signature.concat(degree.coreInfo.issuer));
+            const issuanceStateAddress = namespacing.identifierAddress(namespacing.ISSUANCE, degree.coreInfo.issuer, degree.signature.concat(degree.coreInfo.issuer));
 
             const issuance = await this.getIssuance(issuanceStateAddress);
             return await this.performChecks(degree, issuance);

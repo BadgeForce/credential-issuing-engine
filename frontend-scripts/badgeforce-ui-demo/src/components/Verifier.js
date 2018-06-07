@@ -2,7 +2,9 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 import { Icon, List, Header, Card, Image, Form, Message, Grid, Transition, Button } from 'semantic-ui-react'
 import  bjs from '../badgeforcejs-lib'; 
-import { toast } from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
+import { Toaster } from './Toaster';
+
 import QrReader from 'react-qr-reader'
 
 const moment = require('moment');
@@ -147,7 +149,7 @@ export class Verifier extends Component {
         try {
             await sleep(2);
             const {message, success} = data;
-            this.props.updateToast(this.state.toastId, message, success ? toast.TYPE.SUCCESS : toast.TYPE.ERROR);
+            Toaster.update(this.state.toastId, message, success ? toast.TYPE.SUCCESS : toast.TYPE.ERROR);
         } catch (error) {
             console.log(error);
         }    
@@ -162,7 +164,7 @@ export class Verifier extends Component {
                 await sleep(2);
                 
                 if(error) {
-                    this.props.notify(error.message, toast.TYPE.ERROR);
+                    Toaster.notify(error.message, toast.TYPE.ERROR);
                     this.setState({loading: false, results: null, visible: false});
                     return
                 }
@@ -173,9 +175,9 @@ export class Verifier extends Component {
                     name,
                     institutionId,
                     loading: false,
-                });
-                this.props.notify('Ready to verify', toast.TYPE.SUCCESS);
-                await animateElem(this.verifyButtonRef.current, 3, 'shake');
+                }, async () => await this.handleVerify());
+                // Toaster.notify('Ready to verify', toast.TYPE.SUCCESS);
+                // await animateElem(this.verifyButtonRef.current, 3, 'shake');
             }
             this.badgeforceVerifier.readFile(file, this.badgeforceVerifier.fileTypes.bfac, done);
         } catch (error) {
@@ -220,11 +222,11 @@ export class Verifier extends Component {
     }
     async handleVerify() {
         if(this.isValidForm()){
-            const toastId = this.props.notify('Verifying', toast.TYPE.INFO);
+            const toastId = Toaster.notify('Verifying', toast.TYPE.INFO);
             this.setState({results: null, visible: false, toastId, loading: true});
             try {
                 const results = await this.badgeforceVerifier.verifyAcademic(this.state.recipient, this.state.name, this.state.institutionId);
-                this.props.updateToast(this.state.toastId, 'Done Verifying', toast.TYPE.INFO);
+                Toaster.update(this.state.toastId, 'Done Verifying', toast.TYPE.INFO);
                 this.setState({
                     results, 
                     recipient: '', 
@@ -238,7 +240,7 @@ export class Verifier extends Component {
                 });
             } catch (error) {
                 console.log(error);
-                this.props.updateToast(this.state.toastId, error.message, toast.TYPE.ERROR);
+                Toaster.update(this.state.toastId, error.message, toast.TYPE.ERROR);
                 this.setState({
                     recipient: '', 
                     name: '', 
@@ -258,7 +260,7 @@ export class Verifier extends Component {
         })
     }
     handleScan(data) {
-        this.props.notify(data.toString())
+        Toaster.notify(data.toString())
     }
     showResults() {
         return (
@@ -299,7 +301,7 @@ export class Verifier extends Component {
                         <QrReader
                         ref={this.qrScannerRef}
                         delay={100}
-                        onError={err => this.props.notify('Something went wrong reading QR Code', toast.TYPE.ERROR)}
+                        onError={err => Toaster.notify('Something went wrong reading QR Code', toast.TYPE.ERROR)}
                         onScan={this.handleScan}
                         style={{ width: '100%' }}
                         legacyMode={true}
@@ -307,6 +309,7 @@ export class Verifier extends Component {
                 </div>
                 : null} */}
                 <Grid.Column>
+                    <ToastContainer autoClose={5000} />
                     <Form loading={this.state.loading} size='large' error={this.state.formError ? true : undefined}>
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.recipient}  mobile={4} tablet={12} placeholder='Recipient Public Key' onChange={(e, recipient) => this.setState({recipient: recipient.value})} />
                         <Form.Input error={this.state.formError ? true : undefined} value={this.state.name}  mobile={4} tablet={12} placeholder='Credential Name' onChange={(e, name) => this.setState({name: name.value})} />

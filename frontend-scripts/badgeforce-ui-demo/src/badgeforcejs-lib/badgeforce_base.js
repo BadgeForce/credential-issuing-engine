@@ -4,14 +4,16 @@ const secp256k1 = require('secp256k1');
 const validator = require('validator');
 const {AcademicCredential, Core, StorageHash, Issuance} = require('../protos/credentials/compiled').issuer_pb;
 
-export class Config {
-    
-    chainAPI = { host: 'http://127.0.0.1', port: 3010, endpoint: ''};
-    ipfsAPI = { host: 'http://127.0.0.1', port: 3010, endpoint: '/ipfs'}; 
-
-    constructor(config) {
-        this.validateConfig(config);
+const CONFIG_DEFAULT = {
+    endpoints: {
+        chain: { host: 'https:testnet.badgeforce.io', endpoint: ''},
+        ipfs: { host: 'https:testnet.badgeforce.io', endpoint: '/ipfs'},
     }
+}
+export class Config {
+    api = 'https://testnet.badgeforce.io';
+    chainAPI = { host: 'https://ec2-54-210-230-199.compute-1.amazonaws.com', port: 8008, endpoint: ''}
+    ipfsAPI = { host: 'https://ec2-54-210-230-199.compute-1.amazonaws.com', port: 8080, endpoint: '/ipfs'}
 
     validateConfig(config) {
         if(!config || !config.endpoints) return;
@@ -77,10 +79,10 @@ export class ProtoDecoder {
         return StorageHash.decode(new Uint8Array(data));
     }
 
-    encodedQRStorageHash(hash) {
-        console.log(hash)
-        const b = StorageHash.encode(StorageHash.create({hash})).finish();
-        return btoa(Array.prototype.toString.call(b))
+    static encodedQRDegree(data) {
+        console.log(data)
+        const b = AcademicCredential.encode(AcademicCredential.create(data)).finish();
+        return Buffer.from(b).toString('base64')
     }
 }
 
@@ -160,6 +162,7 @@ export class Importer extends ProtoDecoder{
                 const parsed = JSON.parse(contents);
                 degree = this.decodeDegree(Buffer.from(parsed.data, 'base64')).coreInfo;
             } catch (error) {
+                console.log(error)
                 invalidFileType = new Error(this.invalidFileTypeErr('Unknown'));
             }
             
@@ -180,6 +183,7 @@ export class BadgeForceBase extends Importer{
     constructor(config) {
         super();
         this.config = new Config(config);
+        // this.config = new Config(CONFIG_DEFAULT)
     }
 
     isValidPublicKey(key) {
@@ -219,7 +223,7 @@ export class BadgeForceBase extends Importer{
 
     async queryIPFS(hash) {
         try {
-            const uri = `${this.config.getIPFSAPI()}/${hash}`;
+            const uri = `${this.config.api}/ipfs/${hash}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
             return await response.json();
@@ -230,7 +234,7 @@ export class BadgeForceBase extends Importer{
 
     async queryState(address) {
         try {
-            const uri = this.config.getChainAPI(`/state?address=${address}`);
+            const uri = `${this.config.api}/state?address=${address}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
             return await response.json();

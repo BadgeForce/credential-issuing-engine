@@ -12,10 +12,27 @@
 # limitations under the License.
 # ------------------------------------------------------------------------------
 
+# docker build -f compose-network/badgeforce/nginx/Dockerfile -t reverse-proxy ./compose-network/badgeforce/nginx
+
 version: "3.5"
 
 services:
 
+  reverseProxy: 
+    image: reverse-proxy:latest
+    container_name: badgeforce-chain-reverse-proxy
+    expose: 
+      - 9000
+    ports:
+      - "9000:9000"
+    links:
+      - rest-api
+      - ipfs-node
+    depends_on:
+      - rest-api
+      - ipfs-node
+    networks: 
+      - badgeforce-blockchain
   settings-tp:
     image: hyperledger/sawtooth-settings-tp:1.0
     container_name: sawtooth-settings-tp-default
@@ -87,6 +104,8 @@ services:
   rest-api:
     image: hyperledger/sawtooth-rest-api:1.0
     container_name: sawtooth-rest-api-default
+    expose: 
+      - 8008
     ports:
       - "8008:8008"
     depends_on:
