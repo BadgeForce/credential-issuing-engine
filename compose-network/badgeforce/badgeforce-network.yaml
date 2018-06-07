@@ -33,6 +33,7 @@ services:
       - ipfs-node
     networks: 
       - badgeforce-blockchain
+      
   settings-tp:
     image: hyperledger/sawtooth-settings-tp:1.0
     container_name: sawtooth-settings-tp-default
