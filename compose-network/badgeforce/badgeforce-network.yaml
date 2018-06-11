@@ -17,23 +17,31 @@
 version: "3.5"
 
 services:
-
-  reverseProxy: 
-    image: reverse-proxy:latest
-    container_name: badgeforce-chain-reverse-proxy
-    expose: 
-      - 9000
+  proxy:
+    image: jwilder/nginx-proxy:alpine
+    restart: always
+    volumes:
+       - /var/run/docker.sock:/tmp/docker.sock:ro
+       - ./certs:/etc/nginx/certs:ro
+       - ./vhost.d:/etc/nginx/vhost.d
+       - ./html:/usr/share/nginx/html
+       - ./conf.d:/etc/nginx/conf.d
+    environment:
+       - DEFAULT_HOST=badgeforce.io
     ports:
-      - "9000:9000"
-    links:
-      - rest-api
-      - ipfs-node
-    depends_on:
-      - rest-api
-      - ipfs-node
-    networks: 
-      - badgeforce-blockchain
-      
+       - "443:443"
+       - "80:80"
+    labels:
+       - "com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy=true"
+  le:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./certs:/etc/nginx/certs:rw
+      - ./vhost.d:/etc/nginx/vhost.d:rw
+      - ./html:/usr/share/nginx/html:rw
+    environment:
+      - NGINX_PROXY_CONTAINER=proxy_proxy_1
   settings-tp:
     image: hyperledger/sawtooth-settings-tp:1.0
     container_name: sawtooth-settings-tp-default
@@ -112,6 +120,11 @@ services:
     depends_on:
       - validator
     entrypoint: sawtooth-rest-api -C tcp://validator:4004 --bind rest-api:8008
+    environment:
+      - VIRTUAL_HOST=demo.badgeforce.io
+      - VIRTUAL_PORT=8008
+      - LETSENCRYPT_HOST=demo.badgeforce.io
+      - LETSENCRYPT_EMAIL=engineering@badgeforce.io
     networks: 
       - badgeforce-blockchain
 
@@ -129,4 +142,8 @@ services:
 
 networks: 
   badgeforce-blockchain:
-    name: badgeforcechain
+    name: badgeforce-blockchain
+
+volumes:
+  etc:
+  usr:
