@@ -102,19 +102,17 @@ services:
     container_name: apache2-proxy
     expose: 
       - 80
+      - 443
     ports:
       - "80:80"
+      - "443":"443"
     depends_on:
       - rest-api
       - ipfs-node
-    entrypoint: apachectl -DFOREGROUND -e debug
     stdin_open: true
     tty: true
     networks: 
       - badgeforce-blockchain
-    env_file:
-      - ./apache2-proxy/aws.env
-
   shell:
     image: hyperledger/sawtooth-all:1.0
     container_name: sawtooth-shell-default
