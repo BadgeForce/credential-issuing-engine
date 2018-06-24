@@ -12,8 +12,8 @@ const CONFIG_DEFAULT = {
 }
 export class Config {
     api = 'https://testnet.badgeforce.io';
-    chainAPI = { host: 'https://ec2-54-210-230-199.compute-1.amazonaws.com', port: 8008, endpoint: ''}
-    ipfsAPI = { host: 'https://ec2-54-210-230-199.compute-1.amazonaws.com', port: 8080, endpoint: '/ipfs'}
+    chainAPI = { host: 'http://localhost', port: 3010, endpoint: ''}
+    ipfsAPI = { host: 'http://localhost', port: 3010, endpoint: '/ipfs'}
 
     validateConfig(config) {
         if(!config || !config.endpoints) return;
@@ -223,7 +223,7 @@ export class BadgeForceBase extends Importer{
 
     async queryIPFS(hash) {
         try {
-            const uri = `${this.config.api}/ipfs/${hash}`;
+            const uri = `${this.config.getIPFSAPI()}/${hash}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
             return await response.json();
@@ -234,7 +234,7 @@ export class BadgeForceBase extends Importer{
 
     async queryState(address) {
         try {
-            const uri = `${this.config.api}/state?address=${address}`;
+            const uri = `${this.config.getChainAPI("/state")}?address=${address}`;
             const init = {method: 'GET', headers: {'Content-Type': 'application/json'}};
             const response = await window.fetch(new Request(uri, init));
             return await response.json();
