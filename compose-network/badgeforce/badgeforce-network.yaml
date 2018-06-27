@@ -96,23 +96,6 @@ services:
     entrypoint: sawtooth-rest-api -C tcp://validator:4004 --bind rest-api:8008
     networks: 
       - badgeforce-blockchain
-  
-  reverse-proxy:
-    image: apache2-proxy:latest
-    container_name: apache2-proxy
-    expose: 
-      - 80
-      - 443
-    ports:
-      - "80:80"
-      - "443":"443"
-    depends_on:
-      - rest-api
-      - ipfs-node
-    stdin_open: true
-    tty: true
-    networks: 
-      - badgeforce-blockchain
   shell:
     image: hyperledger/sawtooth-all:1.0
     container_name: sawtooth-shell-default
