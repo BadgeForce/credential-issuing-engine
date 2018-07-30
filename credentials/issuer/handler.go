@@ -7,7 +7,7 @@ import (
 	"github.com/BadgeForce/badgeforce-chain-node/common"
 	"github.com/BadgeForce/badgeforce-chain-node/credentials/academic"
 	"github.com/BadgeForce/badgeforce-chain-node/credentials/issuance"
-	issuer_pb "github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb"
+	"github.com/BadgeForce/badgeforce-chain-node/credentials/proto/issuer_pb"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/rberg2/sawtooth-go-sdk/logging"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
@@ -45,22 +45,29 @@ func IssueCredentialHandler(request *processor_pb2.TpProcessRequest, context *pr
 		return &processor.InvalidTransactionError{Msg: "Could compute integrity hash"}
 	}
 
+	storageHash, err := academic.NewAcademicState(context).SaveCredential(credential)
+	if err != nil {
+		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save SaveCredential %v", err.Error())}
+	}
+
 	newIssuance := &issuer_pb.Issuance{
 		Signature:            credential.GetSignature(),
 		IssuerPublicKey:      request.GetHeader().GetSignerPublicKey(),
 		RecipientPublicKey:   credential.GetCoreInfo().GetRecipient(),
 		ProofOfIntegrityHash: poiHash,
+		StorageHash:          storageHash,
 	}
 
-	err = issuance.NewIssuanceState(context).SaveIssuance(newIssuance)
+	_, err = issuance.NewIssuanceState(context).SaveIssuance(newIssuance)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: "Could not save issuance"}
 	}
 
-	err = academic.NewAcademicState(context).SaveCredential(credential)
-	if err != nil {
-		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save SaveCredential %v", err.Error())}
-	}
+	//receipt := txn_receipt_pb2.TransactionReceipt{
+	//
+	//}
+	//
+	//processor.Context.AddReceiptData
 
 	return nil
 }

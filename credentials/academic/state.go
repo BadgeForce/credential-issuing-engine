@@ -45,20 +45,20 @@ func (s *AcademicState) GetStorageHash(publicKey, degreeName, institutionID stri
 }
 
 // SaveCredential ...
-func (s *AcademicState) SaveCredential(credential issuer_pb.AcademicCredential) error {
+func (s *AcademicState) SaveCredential(credential issuer_pb.AcademicCredential) (string, error) {
 	ipfsClient := common.NewIPFSHTTPClient(IPFSCONN)
 	hash, err := ipfsClient.AddBACFile(credential)
 	if err != nil {
-		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save data to IPFS %v", err.Error())}
+		return "", &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save data to IPFS %v", err.Error())}
 	}
 
 	storageHash := issuer_pb.StorageHash{Hash: hash}
 	err = s.SaveStorageHash(credential.GetCoreInfo(), storageHash)
 	if err != nil {
-		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not storage hash %v", err.Error())}
+		return "", &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not storage hash %v", err.Error())}
 	}
 
-	return nil
+	return hash, nil
 }
 
 // SaveStorageHash ...

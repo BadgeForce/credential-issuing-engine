@@ -45,23 +45,23 @@ func (s *IssuanceState) GetIssuance(signature, issuer string) (*issuer_pb.Issuan
 }
 
 // SaveIssuance ...
-func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) error {
+func (s *IssuanceState) SaveIssuance(issuance *issuer_pb.Issuance) (string, error) {
 	//validate this data
 	address := common.IdentifierAddress(Namespace, issuance.GetIssuerPublicKey(), fmt.Sprintf("%v%v", issuance.GetSignature(), issuance.GetIssuerPublicKey()))
 	b, err := proto.Marshal(issuance)
 	if err != nil {
 		logger.Error(err)
-		return &processor.InvalidTransactionError{Msg: "Invalid data format"}
+		return "", &processor.InvalidTransactionError{Msg: "Invalid data format"}
 	}
 	_, err = s.Context.SetState(map[string][]byte{
 		address: b,
 	})
 	if err != nil {
 		logger.Errorf("ERROR", err, address)
-		return &processor.InvalidTransactionError{Msg: "Here Could not set Issuance"}
+		return "", &processor.InvalidTransactionError{Msg: "Here Could not set Issuance"}
 	}
 
-	return nil
+	return address, nil
 }
 
 // Revoke ...
@@ -72,7 +72,7 @@ func (s *IssuanceState) Revoke(signature, issuer string) error {
 	}
 
 	issuance.RevokationStatus = true
-	err = s.SaveIssuance(issuance)
+	_, err = s.SaveIssuance(issuance)
 	if err != nil {
 		return &processor.InvalidTransactionError{Msg: "Could not set Issuance"}
 	}
