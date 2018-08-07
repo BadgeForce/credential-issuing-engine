@@ -1,11 +1,11 @@
 network_up:
-	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml up --force-recreate 
+	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml up --force-recreate --abort-on-container-exit
 
 network_down:
 	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml down 
 
 network_peer: 
-	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml up --force-recreate
+	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml up --force-recreate --abort-on-container-exit
 
 network_peer_remove:
 	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml down

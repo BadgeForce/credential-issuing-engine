@@ -23,6 +23,7 @@ services:
     depends_on:
       - validator
     entrypoint: settings-tp -vv -C tcp://validator:4004
+    restart: always
 
   ipfs-node:
     image: jbenet/go-ipfs:latest
@@ -38,6 +39,7 @@ services:
       - "5001:5001"
     networks: 
       - badgeforce-blockchain
+    restart: always
   
   badgeforce-accounts:
     image: badgeforce-accounts:latest
@@ -68,21 +70,25 @@ services:
     expose:
       - 4004
       - 8800
+    env_file:
+      - ./.env
     volumes: 
-      - ./config.sh:/badgeforce/configuration/config.sh
+      - ./config.sh:/badgeforce/scripts/config.sh
+      - /badgeforce/logs=/badgeforce/logs
+      - /badgeforce/etc=/badgeforce/etc
+      - /badgeforce/keys=/badgeforce/keys
+      - /badgeforce/data=/badgeforce/data
     ports:
       - "4004:4004"
       - "8800:8800"
     entrypoint: "bash -c \"\
-        ./badgeforce/configuration/config.sh && \
+        ./badgeforce/scripts/config.sh && \
         sawtooth-validator -vv \
-          --endpoint tcp://validator:8800 \
-          --bind component:tcp://eth0:4004 \
-          --bind network:tcp://eth0:8800 \
           --network-auth trust \
         \""
     networks: 
       - badgeforce-blockchain
+    restart: always
 
   rest-api:
     image: hyperledger/sawtooth-rest-api:1.0
@@ -96,6 +102,8 @@ services:
     entrypoint: sawtooth-rest-api -C tcp://validator:4004 --bind rest-api:8008
     networks: 
       - badgeforce-blockchain
+    restart: always
+
   shell:
     image: hyperledger/sawtooth-all:1.0
     container_name: sawtooth-shell-default
@@ -107,6 +115,7 @@ services:
         \""
     networks: 
       - badgeforce-blockchain
+    restart: always
 
 networks: 
   badgeforce-blockchain:
