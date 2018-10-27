@@ -1,33 +1,44 @@
-network_up:
-	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml up --force-recreate --abort-on-container-exit
+OUT := credential-template-engine
+PKG := github.com/BadgeForce/badgeforce-chain-node/cmd
+DOCKERFILE := ./build/package/Dockerfile
+VERSION := $(shell git describe --always --long --dirty)
+PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
+GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/)
+PROTOS := ./core/protos
 
-network_down:
-	docker-compose -f ./compose-network/badgeforce/badgeforce-network.yaml down 
+all: run
 
-network_peer: 
-	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml up --force-recreate --abort-on-container-exit
+docker-image:
+	docker build -f ${DOCKERFILE} -t ${OUT} .
 
-network_peer_remove:
-	docker-compose -f ./compose-network/peer-node/badgeforce-network-peer.yaml down
+deps:
+	go get ${PKG}
 
-docker_build: 
-	docker build --build-arg SSH_PRIVATE_KEY=~/.ssh/id_rsa -f credentials/issuer/docker/Dockerfile -t badgeforce-issuer .		
-	docker build --build-arg SSH_PRIVATE_KEY=~/.ssh/id_rsa -f accounts/docker/Dockerfile -t badgeforce-accounts .		
+build:
+	go build -i -v -o ${OUT} ${PKG}
 
-compile_protobufers: protobuf_accounts protobuf_credentials
+test:
+	@go test -short ${PKG_LIST}
 
-protobuf_accounts :
-	protoc -I ./accounts/proto ./accounts/proto/account.proto ./accounts/proto/payload.proto --go_out=./accounts/proto/badgeforce_pb
+vet:
+	@go vet ${PKG_LIST}
 
-protobuf_credentials :
-	protoc -I ./credentials/proto ./credentials/proto/payload.proto ./credentials/proto/issuance.proto ./credentials/proto/degree.proto  --go_out=./credentials/proto/issuer_pb
+lint:
+	@for file in ${GO_FILES} ;  do \
+		golint $$file ; \
+	done
 
-compile_protos_browser :
-	pbjs -t static-module -w commonjs -o ./protobufs-js/browser/accounts/compiled.js ./accounts/proto/account.proto ./accounts/proto/payload.proto
-	pbjs -t static-module -w commonjs -o ./protobufs-js//browser/credentials/compiled.js ./credentials/proto/payload.proto ./credentials/proto/issuance.proto ./credentials/proto/degree.proto
+runtp:
+	./${OUT}-v${VERSION} --validator-endpoint $(validator)
 
-compile_protos_node :
-	protoc -I ./credentials/proto ./credentials/proto/payload.proto ./credentials/proto/issuance.proto ./credentials/proto/degree.proto --js_out=import_style=commonjs,binary:./protobufs-js/node/credentials
-	protoc -I ./accounts/proto ./accounts/proto/account.proto ./accounts/proto/payload.proto --js_out=import_style=commonjs,binary:./protobufs-js/node/accounts
+out:
+	@echo ${OUT}-v${VERSION}
 
-compile_protos_js : compile_protos_browser compile_protos_node
+protos:
+	protoc -I ${PROTOS} ${PROTOS}/payload.proto ${PROTOS}/credential.proto --go_out=${PROTOS}
+	protoc -I ${PROTOS} ${PROTOS}/payload.proto ${PROTOS}/credential.proto --js_out=import_style=commonjs,binary:./proto-js
+
+clean:
+	-@rm ${OUT} ${OUT}-v*
+
+.PHONY: run protos runtp build docker-image vet lint out deps

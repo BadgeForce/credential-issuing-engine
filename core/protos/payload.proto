@@ -1,0 +1,14 @@
+syntax = "proto3";
+package badgeforce_pb;
+
+enum Method {
+    ISSUE = 0;
+    REVOKE = 1;
+    DELETE = 2;
+    UPDATE = 3;
+}
+
+message RPCRequest {
+    Method method = 1;
+    string params = 2;
+}
