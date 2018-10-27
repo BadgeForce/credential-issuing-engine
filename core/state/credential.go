@@ -32,7 +32,7 @@ type CredStateAddr struct {
 }
 
 func (c *CredStateAddr) String() string {
-	return fmt.Sprintf(credAddressTmpl, c.Namespace, )
+	return fmt.Sprintf(credAddressTmpl, c.Namespace, c.RecipientHex, c.CredentialNameHex)
 }
 
 func NewCredAddr(credName, recipient string) *CredStateAddr {
@@ -40,6 +40,12 @@ func NewCredAddr(credName, recipient string) *CredStateAddr {
 }
 
 func (c *CredStateManager) SaveCredential(credential *badgeforce_pb.Credential, issuance *badgeforce_pb.Issuance) error {
+	//ipfsClient := common.NewIPFSHTTPClient(IPFSCONN)
+	//hash, err := ipfsClient.AddBACFile(credential)
+	//if err != nil {
+	//	return "", &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save data to IPFS %v", err.Error())}
+	//}
+
 	address := NewCredAddr(credential.GetTemplateName(), issuance.GetTemplateName())
 	b, err := proto.Marshal(credential)
 	if err != nil {
@@ -73,55 +79,24 @@ func (c *CredStateManager) GetCredentials(address ...string) ([]badgeforce_pb.Cr
 	return credentials, nil
 }
 
-// GetStorageHash ...
-func (s *AcademicState) GetStorageHash(publicKey, degreeName, institutionID string) (*issuer_pb.StorageHash, error) {
-	var storageHash issuer_pb.StorageHash
-	address := common.IdentifierAddress(Namespace, publicKey, fmt.Sprintf("%v%v%v", publicKey, degreeName, institutionID))
-	AcademicState, err := s.Context.GetState([]string{address})
+func (c *CredStateManager) DeleteTemplates(addresses ...string) error {
+	_, err := c.Context.DeleteState(addresses)
 	if err != nil {
-		return nil, &processor.InvalidTransactionError{Msg: "Could not GetAcademicState"}
-	}
-	if len(AcademicState[address]) > 0 {
-		proto.Unmarshal(AcademicState[address], &storageHash)
-		return &storageHash, nil
+		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("unable to delete credential(s) (%s)", err)}
 	}
 
-	return nil, &processor.InvalidTransactionError{Msg: "Credential Not Found"}
-}
-
-// SaveCredential ...
-func (s *AcademicState) SaveCredential(credential issuer_pb.AcademicCredential) (string, error) {
-	//ipfsClient := common.NewIPFSHTTPClient(IPFSCONN)
-	//hash, err := ipfsClient.AddBACFile(credential)
-	//if err != nil {
-	//	return "", &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save data to IPFS %v", err.Error())}
+	//for _, address := range addresses {
+	//	_, receiptBytes, err := c.NewTemplateDeleteReceipt("", "", address)
+	//	if err != nil {
+	//		logger.Warnf("unable to generate transaction receipt for template saved (%s)", err)
+	//	}
+	//
+	//	err = s.context.AddReceiptData(receiptBytes)
+	//	if err != nil {
+	//		logger.Warnf("unable to add transaction receipt for template saved (%s)", err)
+	//	}
+	//
 	//}
-
-	storageHash := issuer_pb.StorageHash{Hash: hash}
-	err = s.SaveStorageHash(credential.GetCoreInfo(), storageHash)
-	if err != nil {
-		return "", &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not storage hash %v", err.Error())}
-	}
-
-	return hash, nil
-}
-
-// SaveStorageHash ...
-func (s *AcademicState) SaveStorageHash(credential *issuer_pb.Core, storageHash issuer_pb.StorageHash) error {
-	//validate this data
-	address := common.IdentifierAddress(Namespace, credential.GetRecipient(), fmt.Sprintf("%v%v%v", credential.GetRecipient(), credential.GetName(), credential.GetInstitutionId()))
-	b, err := proto.Marshal(&storageHash)
-	if err != nil {
-		logger.Error(err)
-		return &processor.InvalidTransactionError{Msg: "Invalid data format"}
-	}
-	_, err = s.Context.SetState(map[string][]byte{
-		address: b,
-	})
-	if err != nil {
-		logger.Errorf("ERROR", err, address)
-		return &processor.InvalidTransactionError{Msg: "Could not set Storage Hash"}
-	}
 
 	return nil
 }
