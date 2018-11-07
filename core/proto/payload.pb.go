@@ -6,12 +6,12 @@ Package badgeforce_pb is a generated protocol buffer package.
 
 It is generated from these files:
 	payload.proto
-	credential.proto
+	credentials.proto
 
 It has these top-level messages:
 	RPCRequest
 	Credential
-	Issuance
+	Template
 */
 package badgeforce_pb
 
