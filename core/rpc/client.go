@@ -6,7 +6,10 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/BadgeForce/badgeforce-chain-node/core/common"
 	"github.com/BadgeForce/badgeforce-chain-node/core/proto"
+	"github.com/rberg2/sawtooth-go-sdk/logging"
 )
+
+var logger = logging.Get()
 
 var delegateCB = func(request *processor_pb2.TpProcessRequest) (string, interface{}, error) {
 	var rpcRequest badgeforce_pb.RPCRequest

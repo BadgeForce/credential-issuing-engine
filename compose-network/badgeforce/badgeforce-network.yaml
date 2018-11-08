@@ -25,21 +25,21 @@ services:
     entrypoint: settings-tp -vv -C tcp://validator:4004
     restart: always
 
-#  ipfs-node:
-#    image: jbenet/go-ipfs:latest
-#    container_name: ipfs-node
-#    restart: always
-#    expose:
-#      - 8080
-#      - 4001
-#      - 5001
-#    ports:
-#      - "8080:8080"
-#      - "4001:4001"
-#      - "5001:5001"
-#    networks:
-#      - badgeforce-blockchain
-#    restart: always
+  ipfs-node:
+    image: jbenet/go-ipfs:latest
+    container_name: ipfs-node
+    restart: always
+    expose:
+      - 8080
+      - 4001
+      - 5001
+    ports:
+      - "8080:8080"
+      - "4001:4001"
+      - "5001:5001"
+    networks:
+      - badgeforce-blockchain
+    restart: always
   
 #  badgeforce-accounts:
 #    image: badgeforce-accounts:latest

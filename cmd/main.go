@@ -15,6 +15,7 @@ var logger = logging.Get()
 
 func main() {
 	pflag.StringP("verbose", "v", "debug", "Log verbosity info|warning|debug")
+	pflag.String("ipfs",  "localhost:5001", "ipfs connection uri")
 	pflag.String("validator", "", "Validator endpoint")
 	pflag.IntP("worker-queue", "q", 100, "Set the maximum queue size before rejecting process requests")
 	pflag.IntP("worker-threads", "t", 0, "Set the number of worker threads to use for processing requests in parallel")

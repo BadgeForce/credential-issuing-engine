@@ -33,6 +33,7 @@ func (handler *IssueCredentialHandler) issueCredential(request *processor_pb2.Tp
 		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("could not unmarshal credential data from rpc request for ISSUE (%s)", err)}
 	}
 
+
 	var credential badgeforce_pb.Credential
 	err = proto.Unmarshal(decodedPB, &credential)
 	if err != nil {

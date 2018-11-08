@@ -7,6 +7,8 @@ import (
 	"github.com/BadgeForce/badgeforce-chain-node/core/proto"
 	"github.com/BadgeForce/badgeforce-chain-node/core/common"
 	"time"
+	"github.com/spf13/viper"
+	"github.com/BadgeForce/badgeforce-chain-node/core/ipfs"
 )
 
 type CredentialState struct {
@@ -22,21 +24,23 @@ func NewCredentialState(context *processor.Context) *CredentialState {
 }
 
 func (c *CredentialState) SaveCredential(credential *badgeforce_pb.Credential, credentialData string, actor string) error {
-	//ipfsClient := common.NewIPFSHTTPClient(IPFSCONN)
-	//hash, err := ipfsClient.AddBACFile(credential)
-	//if err != nil {
-	//	return "", &processor.InvalidTransactionError{Msg: fmt.Sprintf("Could not save data to IPFS %v", err.Error())}
-	//}
+	ipfsClient := ipfs.NewIPFSHTTPClient(viper.GetString("ipfs"))
 
-	//@Todo implement IPFS hashing for credentialData
+	//@Todo verify signature with signer public key
+	hash, err := ipfsClient.AddBACFile(credential.GetSignature(), credential.GetRecipientPublicKey(), credentialData)
+	if err != nil {
+		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("error adding credential data to IPFS (%s)", err)}
+	}
 
 	if credential.GetIssuerPublicKey() != actor {
 		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("attempt by unauthorized actor to issue credential on behalf of someone else want (%s) got (%s)", actor, credential.GetIssuerPublicKey())}
 	}
 
+	//@Todo verify credential template exists
+
 	credential.ProofOfIntegrityHash = common.ProofOfIntegrityHash([]byte(credentialData))
 	credential.IssuedAt = time.Now().Unix()
-	//@Todo set storage_hash
+	credential.StorageHash = hash
 
 	address := CredentialAddress(credential)
 	b, err := proto.Marshal(credential)
