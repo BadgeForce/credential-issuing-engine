@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "credential_pb";
+package credential_pb;
+
+import "credential.proto";
+import "payload.proto";
+
+message Receipt {
+    int64 date = 1;
+    string state_address = 2;
+    Method rpc_method = 3;
+    Credential credential = 4;
+}
