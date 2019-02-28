@@ -14,7 +14,7 @@ deps:
 	GO111MODULES=on go get -v ${PKG}
 
 build:
-	GO111MODULES=on go build -i -v -o ${OUT} ${PKG}
+	GO111MODULES=on vgo build -v -o ${OUT} ${PKG}
 
 test:
 	GO111MODULES=on go test -short ${PKG_LIST}
@@ -34,9 +34,8 @@ out:
 	@echo ${OUT}-v${VERSION}
 
 protos:
-	protoc -I ./protos ./protos/credential.proto ./protos/payload.proto ./protos/transaction_receipts.proto --go_out=./core/credential_pb
-	protoc -I ./protos ./protos/template.proto --go_out=./core/template_pb
-	#protoc -I ./protos ./protos/credential.proto ./protos/template.proto ./protos/payload.proto ./protos/transaction_receipts.proto --js_out=import_style=commonjs,binary:./dev-cli/proto
+	protoc -I ${GOPATH}/src/github.com/BadgeForce -I ${GOPATH}/src/github.com/BadgeForce/credential-issuing-engine/protos -I ${GOPATH}/src/github.com/BadgeForce/credential-template-engine/protos template.proto credential.proto ci_payload.proto transaction_receipts.proto --go_out=./core/credential_pb
+	#protoc -I ./protos ./protos/credential.proto ./protos/template.proto ./protos/ci_payload.proto ./protos/transaction_receipts.proto --js_out=import_style=commonjs,binary:./dev-cli/proto
 
 clean:
 	-@rm ${OUT} ${OUT}-v*

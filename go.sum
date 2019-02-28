@@ -3,6 +3,8 @@ github.com/BadgeForce/credential-template-engine v0.0.0-20181104092320-d82e190b1
 github.com/BadgeForce/credential-template-engine v0.0.0-20181104092320-d82e190b1472/go.mod h1:q4yxKbNoW+SMJNmgJ5jp0JoxB0thkqodbaAJfKNXbsQ=
 github.com/BadgeForce/sawtooth-utils v0.0.0-20190203133926-6fa3795bf058 h1:sPjT9Shw+yIDVDI4aPD5IQfu90iy4kql2xWJ5TGZsBk=
 github.com/BadgeForce/sawtooth-utils v0.0.0-20190203133926-6fa3795bf058/go.mod h1:q9UCFRhkwS7czAJinLeO2hHpOm4JypqG9F435Nv9B/c=
+github.com/BadgeForce/sawtooth-utils v0.0.0-20190224091258-e591835b9204 h1:qywAB1EqObjsxar3hlSV+x8tx2K0jFeozNl4lS4aTgg=
+github.com/BadgeForce/sawtooth-utils v0.0.0-20190224091258-e591835b9204/go.mod h1:kSrxE/yCWmXT2Q84IFZdA04DErmspFSU2Pn5i2vE5/o=
 github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/aead/siphash v1.0.1/go.mod h1:Nywa3cDsYNNK3gaciGTWPwHt0wlpNV15vwmswBAUSII=

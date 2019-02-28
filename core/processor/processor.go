@@ -3,12 +3,12 @@ package processor
 import (
 	"sync"
 
-	"github.com/BadgeForce/credential-template-engine/core/state"
+	"github.com/BadgeForce/credential-issuing-engine/core/state"
 
 	"github.com/rberg2/sawtooth-go-sdk/processor"
 
-	"github.com/BadgeForce/credential-template-engine/core/rpc"
-	utils "github.com/BadgeForce/sawtooth-utils"
+	"github.com/BadgeForce/credential-issuing-engine/core/rpc"
+	"github.com/BadgeForce/sawtooth-utils"
 )
 
 //TODO: move FamilyName to configuration
@@ -30,7 +30,7 @@ var transactionProcessor *processor.TransactionProcessor
 // TransactionProcessor instantiates transaction processor once and return it
 func TransactionProcessor(validator string) *processor.TransactionProcessor {
 	once.Do(func() {
-		transactionHandler = utils.NewTransactionHandler(rpc.Client, FamilyName, FamilyVersions, []string{state.CredentialTemplatePrefix})
+		transactionHandler = utils.NewTransactionHandler(rpc.Client, FamilyName, FamilyVersions, []string{state.VerifiableCredentialsPrefix})
 		transactionProcessor = utils.NewTransactionProcessor(validator, transactionHandler)
 	})
 

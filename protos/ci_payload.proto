@@ -1,0 +1,25 @@
+syntax = "proto3";
+option go_package = "badgeforce_pb";
+package badgeforce_pb;
+
+import "credential.proto";
+
+enum CredentialIssuingMethod {
+    ISSUE = 0;
+    REVOKE = 1;
+}
+
+message CredentialIssuingRPCRequest {
+    oneof method {
+        Issue issue = 1;
+        Revoke revoke = 2;
+    }
+}
+
+message Issue {
+    Credential params = 1;
+}
+
+message Revoke {
+    repeated string addresses  = 1;
+}

@@ -1,7 +1,10 @@
 package rpc
 
 import (
-	"github.com/BadgeForce/credential-issuing-engine/core/credential_pb"
+	"fmt"
+	credential_pb "github.com/BadgeForce/credential-issuing-engine/core/credential_pb"
+	"github.com/BadgeForce/credential-issuing-engine/core/state"
+	"github.com/BadgeForce/credential-issuing-engine/core/verifier"
 	"github.com/rberg2/sawtooth-go-sdk/processor"
 	"github.com/rberg2/sawtooth-go-sdk/protobuf/processor_pb2"
 )
@@ -13,9 +16,14 @@ type RevokeCredentialHandler struct {
 
 // Handle ...
 func (handler *RevokeCredentialHandler) Handle(request *processor_pb2.TpProcessRequest, context *processor.Context, reqData interface{}) error {
-	_ := reqData.(credential_pb.Revoke)
-	//return state.NewTemplateState(context).Save(create.GetParams())
-	return nil
+	revoke := reqData.(credential_pb.Revoke)
+	addresses := revoke.GetAddresses()
+
+	if invalid, ok := verifier.HasValidOwnership(request.GetHeader().GetSignerPublicKey(), addresses...); !ok {
+		return &processor.InvalidTransactionError{Msg: fmt.Sprintf("invalid issuership of credentials (%s)", invalid)}
+	}
+
+	return state.NewCredentialState(context).Revoke(addresses...)
 }
 
 // Method ...
@@ -24,4 +32,4 @@ func (handler *RevokeCredentialHandler) Method() string {
 }
 
 // RevokeHandle ...
-var RevokeHandle = &RevokeCredentialHandler{credential_pb.Method_REVOKE.String()}
+var RevokeHandle = &RevokeCredentialHandler{credential_pb.CredentialIssuingMethod_REVOKE.String()}
