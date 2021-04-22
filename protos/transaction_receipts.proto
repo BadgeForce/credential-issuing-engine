@@ -1,0 +1,13 @@
+syntax = "proto3";
+option go_package = "badgeforce_pb";
+package badgeforce_pb;
+
+import "credential.proto";
+import "ci_payload.proto";
+
+message IssuingEngineReceipt {
+    int64 date = 1;
+    string state_address = 2;
+    CredentialIssuingMethod rpc_method = 3;
+    Credential credential = 4;
+}
